@@ -71,6 +71,7 @@ impl WaterSampler {
             // TODO enum
             _ => panic!("not supported water model"),
         };
+        map_list.extend(map_files);
 
         let (pdbqt, _errors) = pdbtbx::open(water_ref_file).unwrap();
         let water_ref = to_molecule(pdbqt);

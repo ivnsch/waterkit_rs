@@ -56,7 +56,11 @@ impl EnergyRes {
 impl Map {
     pub async fn new(map_files: Vec<String>, labels: Vec<String>) -> Result<Map> {
         if labels.len() != map_files.len() {
-            return Err(anyhow!("Map files and labels must have the same length"));
+            return Err(anyhow!(
+                "Map files and labels must have the same length, labels: {}, map_files: {}",
+                labels.len(),
+                map_files.len()
+            ));
         }
 
         let mut prev_grid_information = None;
