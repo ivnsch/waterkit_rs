@@ -1,6 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{atom::Atom, fld_parser::parse_fld, map_parser::parse_map};
+use crate::{
+    atom::Atom,
+    fld_parser::parse_fld,
+    map_parser::{parse_map, parse_map_infos, GridInformation},
+};
 use anyhow::{anyhow, Result};
 use kd_tree::KdTree;
 use ndarray::Array3;
@@ -93,7 +97,7 @@ impl Map {
 
         // Read all the affinity maps
         for (label, map_file) in maps {
-            let affinity_map = read_affinity_map(&map_file);
+            let affinity_map = read_affinity_map(&map_file).await?;
             maps_interpn.insert(label.clone(), generate_affinity_map_interpn(&affinity_map));
             affinity_maps.insert(label, affinity_map);
         }
@@ -354,23 +358,25 @@ fn calculate_bounds(tree: &KdTree<[f32; 3]>) -> ([f32; 3], [f32; 3]) {
 
 /// Read grid information in the map file
 async fn grid_information_from_map(path: &str) -> Result<GridInformation> {
-    parse_map(path).await
+    parse_map_infos(path).await
 }
 
 /// Take a grid file and extract gridcenter, spacing and npts info
-/// TODO port: review return type, is this correct
-fn read_affinity_map(path: &str) -> Array3<f32> {
-    todo!()
+async fn read_affinity_map(path: &str) -> Result<Array3<f32>> {
+    let map = parse_map(path).await?;
+    // Some sorceries happen here --> swap x and z axes
+    let affinities = map.affinities;
+    let npts = map.infos.nelements + 1.;
+    let shape = (npts[2] as usize, npts[1] as usize, npts[0] as usize);
+    let mut affinity_3d =
+        Array3::from_shape_vec(shape, affinities).expect("Failed to reshape into 3D array");
+
+    affinity_3d.swap_axes(0, 2);
+
+    Ok(affinity_3d)
 }
 
 fn generate_affinity_map_interpn(affinity_map: &Array3<f32>) -> Interpolator {
     // TODO
     Interpolator {}
-}
-
-#[derive(PartialEq, Debug)]
-pub struct GridInformation {
-    pub spacing: f32,
-    pub nelements: Vec3<f32>,
-    pub center: Vec3<f32>,
 }

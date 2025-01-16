@@ -6,20 +6,40 @@ use std::{
 use anyhow::{anyhow, Result};
 use vek::Vec3;
 
-use crate::autodock_map::GridInformation;
+pub async fn parse_map(path: &str) -> Result<ParsedMap> {
+    let (mut reader, infos) = parse_map_infos_internal(path).await?;
 
-pub async fn parse_map(path: &str) -> Result<GridInformation> {
+    let mut affinities = vec![];
+    let mut line = String::new();
+    while reader.read_line(&mut line)? != 0 {
+        let float = line.trim_end().parse()?;
+        affinities.push(float);
+        line.clear();
+    }
+
+    Ok(ParsedMap { infos, affinities })
+}
+
+pub async fn parse_map_infos(path: &str) -> Result<GridInformation> {
+    println!("will open: {:?}", path);
+    parse_map_infos_internal(path).await.map(|r| r.1)
+}
+
+/// to be shared between case where we read only the infos and the whole file
+async fn parse_map_infos_internal(path: &str) -> Result<(BufReader<File>, GridInformation)> {
     println!("will open: {:?}", path);
     let file = File::open(path)?;
-    let buf_reader = BufReader::new(file);
+    let mut buf_reader = BufReader::new(file);
 
     let mut spacing = vec![];
     let mut elements = vec![];
     let mut center = vec![];
 
-    for line in buf_reader.lines() {
-        let line = line?;
+    let index_where_affinities_begin = 6;
 
+    for _ in 0..index_where_affinities_begin {
+        let mut line = String::new();
+        buf_reader.read_line(&mut line)?;
         match parse_line(&line)? {
             ProcessLineResult::Spacing(s) => spacing.push(s),
             ProcessLineResult::Elements(v) => elements.push(v),
@@ -34,11 +54,14 @@ pub async fn parse_map(path: &str) -> Result<GridInformation> {
         ));
     }
 
-    Ok(GridInformation {
-        spacing: spacing[0],
-        nelements: elements[0],
-        center: center[0],
-    })
+    Ok((
+        buf_reader,
+        GridInformation {
+            spacing: spacing[0],
+            nelements: elements[0],
+            center: center[0],
+        },
+    ))
 }
 
 enum ProcessLineResult {
@@ -49,7 +72,7 @@ enum ProcessLineResult {
 }
 
 fn parse_line(line: &str) -> Result<ProcessLineResult> {
-    // println!("{}", line);
+    println!("{}", line);
     if line.starts_with("SPACING") {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         let spacing = parts[1].parse()?;
@@ -73,4 +96,17 @@ fn parse_line(line: &str) -> Result<ProcessLineResult> {
     } else {
         Ok(ProcessLineResult::Unhandled)
     }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct GridInformation {
+    pub spacing: f32,
+    pub nelements: Vec3<f32>,
+    pub center: Vec3<f32>,
+}
+
+#[derive(Debug)]
+pub struct ParsedMap {
+    pub infos: GridInformation,
+    pub affinities: Vec<f32>,
 }
