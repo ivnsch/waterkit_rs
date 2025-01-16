@@ -35,6 +35,20 @@ impl MoleculeType {
             MoleculeType::Water(Water { atoms, .. }) => atoms.clone(),
         }
     }
+
+    pub fn hydrogen_bonds(&self) -> Option<Vec<HydrogenBond>> {
+        match self {
+            MoleculeType::Receptor(m) => m.hydrogen_bonds.clone(),
+            MoleculeType::Water(w) => w.hydrogen_bonds(),
+        }
+    }
+
+    pub fn coordinates(&self) -> Vec<Vec3<f32>> {
+        match self {
+            MoleculeType::Receptor(m) => m.coordinates.clone(),
+            MoleculeType::Water(w) => w.coordinates.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

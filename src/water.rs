@@ -1,6 +1,6 @@
 use vek::Vec3;
 
-use crate::atom::{Atom, Molecule};
+use crate::atom::{Atom, HydrogenBond, Molecule};
 
 #[derive(Debug, Clone)]
 pub struct Water {
@@ -86,6 +86,10 @@ impl Water {
     //     ndarray: atom information (i, xyz, q, t)
     pub fn atom_informations(&self, atom_ids: Option<Vec<usize>>) -> Vec<Atom> {
         self.molecule.atom_informations(atom_ids)
+    }
+
+    pub fn hydrogen_bonds(&self) -> Option<Vec<HydrogenBond>> {
+        self.molecule.hydrogen_bonds.clone()
     }
 }
 

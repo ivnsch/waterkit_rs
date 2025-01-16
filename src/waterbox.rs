@@ -12,6 +12,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct WaterBox {
     pub molecules: Vec<MoleculeType>,
+    // pub receptor: Molecule,
     pub map: Map,
     pub kd_tree: KdTree<[f32; 3]>,
     pub water_model: String,
@@ -31,6 +32,7 @@ pub struct BoxData {
 
 impl WaterBox {
     pub async fn new(
+        receptor: Molecule,
         map: Map,
         temperature: f32,
         water_model: &str,
@@ -49,7 +51,7 @@ impl WaterBox {
         .await?;
 
         let water_box = WaterBox {
-            molecules: vec![],
+            molecules: vec![MoleculeType::Receptor(receptor)],
             map,
             kd_tree: KdTree::build_by_ordered_float(vec![]),
             water_model: water_model.to_string(),
@@ -131,19 +133,19 @@ impl WaterBox {
     /// TODO port: return connections
     fn place_optimal_spherical_waters(
         &self,
-        molecules: &[Molecule],
+        molecules: &[MoleculeType],
         atom_type: &str,
         partial_charge: f32,
     ) -> Vec<Water> {
         let mut waters = vec![];
 
         for molecule in molecules {
-            if let Some(bonds) = &molecule.hydrogen_bonds {
+            if let Some(bonds) = &molecule.hydrogen_bonds() {
                 for bond in bonds {
                     // Add water molecule only if it's in the map
                     // TODO what structure is this? for now removing the [0]
                     // let anchor_xyz = molecule.coordinates[bond.atom_i][0];
-                    let anchor_xyz = molecule.coordinates[bond.atom_i];
+                    let anchor_xyz = molecule.coordinates()[bond.atom_i];
 
                     if self.map.is_in_map(anchor_xyz) {
                         let w = Water::new(
@@ -211,13 +213,16 @@ impl WaterBox {
     ///     shell_ids (list): ids of the shell(s) (default: None)
     /// Returns:
     ///     list: list of all the molecules in the selected shell(s)
-    pub fn molecules_in_shell(&self, shell_ids: &[usize]) -> Vec<Molecule> {
+    pub fn molecules_in_shell(&self, shell_ids: &[usize]) -> Vec<MoleculeType> {
         // TODO port: filter by ids
-        self.data
-            .shells
-            .iter()
-            .flat_map(|s| s.molecules.clone())
-            .collect()
+        // println!("self.data.shells: {:?}", self.data.shells);
+        // self.data
+        //     .shells
+        //     .iter()
+        //     .flat_map(|s| s.molecules.clone())
+        //     .collect()
+
+        self.molecules.clone()
     }
 
     pub fn number_of_shells(&self) -> usize {

@@ -13,7 +13,7 @@ use vek::Vec3;
 // TODO async + pyfunction: "experimental feature"
 // #[pyfunction]
 pub async fn hydrate_rust(
-    pdbqt_file: &str,
+    receptor_pdbqt_file: &str,
     fld_file: &str,
     output_dir: &str,
     n_frames: usize,
@@ -21,20 +21,21 @@ pub async fn hydrate_rust(
     temperature: f32,
 ) -> Result<()> {
     println!(
-        "called hydrate: pdbqt_file: {}, fld_path: {}, output_dir: {}, n_frames: {}, n_layer: {}",
-        pdbqt_file, fld_file, output_dir, n_frames, n_layer
+        "called hydrate: receptor_pdbqt_file: {}, fld_path: {}, output_dir: {}, n_frames: {}, n_layer: {}",
+        receptor_pdbqt_file, fld_file, output_dir, n_frames, n_layer
     );
 
     // let (mut pdbqt, _errors) = pdbtbx::open("protein_prepared_amber.pdbqt").unwrap();
-    let (mut pdbqt, _errors) = pdbtbx::open(pdbqt_file).unwrap();
-    let molecule = to_molecule(pdbqt);
+    let (pdbqt, _errors) = pdbtbx::open(receptor_pdbqt_file).unwrap();
+    let receptor = to_molecule(pdbqt);
 
     let parsed_fld = parse_fld(fld_file).await?;
     let map = Map::new(parsed_fld.map_files, parsed_fld.labels).await?;
 
     // TODO port: spherical_water_map
 
-    let mut water_box_res = WaterBox::new(map, temperature, "tip3p", None).await;
+    // println!("receptor: {:?}", receptor);
+    let mut water_box_res = WaterBox::new(receptor, map, temperature, "tip3p", None).await;
 
     println!("will iterate over {} frames", n_frames);
     match water_box_res {

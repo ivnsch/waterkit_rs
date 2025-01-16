@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use vek::{quaternion, Quaternion, Vec3};
 
 use crate::{
-    atom::{Bond, Molecule},
+    atom::{Bond, Molecule, MoleculeType},
     autodock_map::Map,
     run_waterkit::to_molecule,
     utils,
@@ -102,8 +102,18 @@ impl WaterSampler {
     }
 
     pub fn set_water_box(&mut self, water_box: WaterBox) {
-        self.receptor = Some(water_box.molecules_in_shell(&vec![0])[0].clone());
+        let mols = water_box.molecules_in_shell(&vec![0]);
+        let receptor = match &mols[0] {
+            MoleculeType::Receptor(molecule) => molecule,
+            // TODO look for better way to structure this,
+            // probably simply store separately and merge when they're needed in a list
+            MoleculeType::Water(_) => panic!("we assume mol[0] to be the receptor.."),
+        };
+
+        self.receptor = Some(receptor.clone());
+
         self.water_model = water_box.water_model.clone();
+
         self.water_box = Some(Box::new(water_box));
     }
 
