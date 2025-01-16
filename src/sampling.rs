@@ -44,7 +44,8 @@ impl WaterSampler {
     ) -> Result<WaterSampler> {
         // Water grids
         let mut map_list = vec![];
-        let spherical_water_map = spherical_water_map.unwrap_or_else(|| "todo path");
+        let spherical_water_map =
+            spherical_water_map.unwrap_or_else(|| "data/water/spherical/water_SW.map");
         map_list.push(spherical_water_map);
 
         // Explicit water grids
@@ -55,7 +56,7 @@ impl WaterSampler {
                     "data/water/tip3p/water_OW.map",
                     "data/water/tip3p/water_HW.map",
                 ],
-                "todo path",
+                "data/water/tip3p/water.pdbqt",
             ),
             "tip5p" => (
                 vec!["SW", "OT", "HT", "LP"],
@@ -65,7 +66,7 @@ impl WaterSampler {
                     "data/water/tip5p/water_LP.map",
                     "data/water/tip3p/water_HW.map",
                 ],
-                "todo path",
+                "data/water/tip5p/water.pdbqt",
             ),
             // TODO enum
             _ => panic!("not supported water model"),
