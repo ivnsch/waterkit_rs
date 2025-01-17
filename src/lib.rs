@@ -1,6 +1,8 @@
 mod atom;
 mod autodock_map;
 mod fld_parser;
+mod force_fields_parser;
+mod hydrogen_bonds;
 mod map_parser;
 mod run_waterkit;
 mod sampling;

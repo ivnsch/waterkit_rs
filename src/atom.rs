@@ -1,6 +1,6 @@
 use vek::Vec3;
 
-use crate::water::Water;
+use crate::{hydrogen_bonds::HydrogenBond, water::Water};
 
 #[derive(Debug, Clone)]
 pub struct Atom {
@@ -130,13 +130,6 @@ impl Molecule {
             self.atoms.clone()
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct HydrogenBond {
-    pub atom_i: usize,
-    pub vector_xyz: Vec3<f32>,
-    pub anchor_type: String,
 }
 
 #[derive(Debug, Clone)]

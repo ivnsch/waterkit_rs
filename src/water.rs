@@ -1,6 +1,9 @@
 use vek::Vec3;
 
-use crate::atom::{Atom, HydrogenBond, Molecule};
+use crate::{
+    atom::{Atom, Molecule},
+    hydrogen_bonds::HydrogenBond,
+};
 
 #[derive(Debug, Clone)]
 pub struct Water {

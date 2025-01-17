@@ -53,13 +53,6 @@ enum ProcessLineResult<'a> {
     Unhandled,
 }
 
-enum Header {
-    Atom,
-    Bond,
-    Mol,
-    Other, // for now just ignoring these
-}
-
 fn parse_line(line: &str) -> ProcessLineResult {
     // println!("{}", line);
 
