@@ -172,7 +172,7 @@ impl WaterBox {
         let partial_charge = 0.0;
 
         let shell_id = self.data.shells.len();
-        let molecules = self.molecules_in_shell(&[]);
+        let molecules = self.molecules_in_shell(Some(&[]));
 
         let mut waters = self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
 
@@ -213,16 +213,25 @@ impl WaterBox {
     ///     shell_ids (list): ids of the shell(s) (default: None)
     /// Returns:
     ///     list: list of all the molecules in the selected shell(s)
-    pub fn molecules_in_shell(&self, shell_ids: &[usize]) -> Vec<MoleculeType> {
-        // TODO port: filter by ids
-        // println!("self.data.shells: {:?}", self.data.shells);
-        // self.data
-        //     .shells
-        //     .iter()
-        //     .flat_map(|s| s.molecules.clone())
-        //     .collect()
+    pub fn molecules_in_shell(&self, shell_ids: Option<&[usize]>) -> Vec<MoleculeType> {
+        // get indices of shell ids: these are the molecule indices
+        let molecule_indices: Vec<usize> = match shell_ids {
+            Some(ids) => self
+                .data
+                .shells
+                .iter()
+                .enumerate()
+                .filter(|(_, shell)| ids.contains(&shell.shell_id))
+                .map(|(index, _)| index)
+                .collect(),
+            None => (0..self.data.shells.len()).collect(),
+        };
 
-        self.molecules.clone()
+        // use molecule indices to retrieve molecules
+        molecule_indices
+            .iter()
+            .map(|&i| self.molecules[i].clone())
+            .collect()
     }
 
     pub fn number_of_shells(&self) -> usize {
@@ -245,7 +254,7 @@ impl WaterBox {
         let pdb_str = "ATOM  %5d  %-4s%-3s%2s%4d    %8.3f%8.3f%8.3f  1.00  1.00          %2s\n";
 
         let shell_id = self.number_of_shells();
-        let water_shells = (1..=shell_id).map(|i| self.molecules_in_shell(&vec![shell_id]));
+        let water_shells = (1..=shell_id).map(|i| self.molecules_in_shell(Some(&vec![shell_id])));
 
         if include_receptor {
             let atoms = self.molecules[0].atoms();
@@ -274,7 +283,6 @@ impl WaterBox {
 
 #[derive(Debug, Clone)]
 pub struct Shell {
-    pub molecules: Vec<Molecule>,
     pub shell_id: usize,
     pub energy_position: f32,
     pub energy_orientation: Vec<f32>,

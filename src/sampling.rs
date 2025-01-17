@@ -102,7 +102,7 @@ impl WaterSampler {
     }
 
     pub fn set_water_box(&mut self, water_box: WaterBox) {
-        let mols = water_box.molecules_in_shell(&vec![0]);
+        let mols = water_box.molecules_in_shell(Some(&vec![0]));
         let receptor = match &mols[0] {
             MoleculeType::Receptor(molecule) => molecule,
             // TODO look for better way to structure this,
@@ -182,7 +182,6 @@ impl WaterSampler {
                         // TODO port: data
                         shells.push(Shell {
                             shell_id: shell_id + 1,
-                            molecules: vec![],
                             energy_position,
                             energy_orientation,
                         });
