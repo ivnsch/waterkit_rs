@@ -50,8 +50,8 @@ impl WaterBox {
         )
         .await?;
 
-        let water_box = WaterBox {
-            molecules: vec![MoleculeType::Receptor(receptor)],
+        let mut water_box = WaterBox {
+            molecules: vec![],
             map,
             kd_tree: KdTree::build_by_ordered_float(vec![]),
             water_model: water_model.to_string(),
@@ -64,6 +64,8 @@ impl WaterBox {
             },
         };
 
+        water_box.add_receptor(receptor);
+
         wopt.set_water_box(water_box.clone());
 
         Ok(water_box)
@@ -71,6 +73,11 @@ impl WaterBox {
 
     fn add_receptor(&mut self, receptor: Molecule) {
         self.add_molecules(&vec![MoleculeType::Receptor(receptor)], true);
+        self.data.shells.push(Shell {
+            shell_id: 0,
+            energy_position: None,
+            energy_orientation: vec![],
+        })
     }
 
     // TODO port: not sure why python autoincrementing dictionary key? using just a vec for now
@@ -284,7 +291,7 @@ impl WaterBox {
 #[derive(Debug, Clone)]
 pub struct Shell {
     pub shell_id: usize,
-    pub energy_position: f32,
+    pub energy_position: Option<f32>,
     pub energy_orientation: Vec<f32>,
 }
 

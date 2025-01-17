@@ -182,7 +182,7 @@ impl WaterSampler {
                         // TODO port: data
                         shells.push(Shell {
                             shell_id: shell_id + 1,
-                            energy_position,
+                            energy_position: Some(energy_position),
                             energy_orientation,
                         });
                         // data.append((shell_id + 1, energy_position, energy_orientation))
