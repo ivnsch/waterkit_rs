@@ -7,14 +7,13 @@ mod sampling;
 mod utils;
 mod water;
 mod waterbox;
-mod waterkit;
+pub mod waterkit;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
 
 use pyo3::prelude::*;
-use run_waterkit::hydrate_rust;
 
 #[pyfunction]
 fn hello_rust(name: &str) -> PyResult<String> {

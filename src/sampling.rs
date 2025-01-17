@@ -1,8 +1,7 @@
 use anyhow::Result;
 use nalgebra::{UnitQuaternion, Vector3};
 use ndarray::{Array2, Array3, Axis};
-use std::collections::HashMap;
-use vek::{quaternion, Quaternion, Vec3};
+use vek::Vec3;
 
 use crate::{
     atom::{Bond, Molecule, MoleculeType},

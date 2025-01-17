@@ -1,5 +1,5 @@
 use anyhow::Result;
-use kd_tree::{KdPoint, KdTree};
+use kd_tree::KdTree;
 use vek::Vec3;
 
 use crate::{
@@ -285,6 +285,7 @@ impl WaterBox {
             // i = atom["i"] + 1
             // j = atom["resnum"] + 1
         }
+        todo!()
     }
 }
 

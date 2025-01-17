@@ -6,7 +6,7 @@ pub fn hydrate_single(water_box: &mut WaterBox, n_layer: usize, frame_id: usize,
 
     println!("frame id: {}", frame_id);
 
-    while true {
+    loop {
         // build_next_shell returns True if
         // it was able to put water molecules,
         // otherwise it returns False and we break

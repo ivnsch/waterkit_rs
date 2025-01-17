@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use nalgebra::Matrix4;
 use rand::{distributions::WeightedIndex, prelude::Distribution, thread_rng, Rng};
-use vek::{num_traits::Float, Mat3, Vec3, Vec4};
+use vek::{Mat3, Vec3, Vec4};
 
 use crate::atom::DihedralPars;
 

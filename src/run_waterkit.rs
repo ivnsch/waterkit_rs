@@ -7,7 +7,6 @@ use crate::{
 };
 use anyhow::Result;
 use pdbtbx::PDB;
-use pyo3::pyfunction;
 use vek::Vec3;
 
 // TODO async + pyfunction: "experimental feature"
