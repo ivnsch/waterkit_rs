@@ -90,7 +90,7 @@ mod tests {
         let res = hydrate_rust(
             "protein_prepared_amber.pdbqt",
             "receptor_maps.fld",
-            ".",
+            "traj",
             100,
             123,
             20.,

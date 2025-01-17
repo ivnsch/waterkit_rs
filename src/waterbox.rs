@@ -1,5 +1,7 @@
 use anyhow::Result;
 use kd_tree::KdTree;
+use std::fmt::Write;
+use std::fs;
 use vek::Vec3;
 
 use crate::{
@@ -254,38 +256,115 @@ impl WaterBox {
     ///     include_receptor (bool): include or exclude the receptor (default: True)
     /// Returns:
     ///     None
-    pub fn to_pdb(&self, fname: &str, water_model: &str, include_receptor: bool) {
+    pub fn to_pdb(&self, fname: &str, water_model: &str, include_receptor: bool) -> Result<()> {
         let mut i = 0;
         let mut j = 0;
-        let mut output_str = "".to_string();
-        let pdb_str = "ATOM  %5d  %-4s%-3s%2s%4d    %8.3f%8.3f%8.3f  1.00  1.00          %2s\n";
+        let mut output_str = String::new();
 
         let shell_id = self.number_of_shells();
         let water_shells = (1..=shell_id).map(|i| self.molecules_in_shell(Some(&vec![shell_id])));
 
+        const PDB_FORMAT: &str =
+            "ATOM  {:5}  {:<4}{:<3}{:<2}{:4}    {:8.3} {:8.3} {:8.3}  1.00  1.00          {:<2}\n";
+
         if include_receptor {
             let atoms = self.molecules[0].atoms();
             for atom in atoms {
-                // TODO port: hmm why "xyz", probably different to coords? python: x, y, z = atom["xyz"]
-                // let [x, y, z] = atom.coords;
-                // TODO port what's this?
-                // output_str += pdb_str % (atom["i"], atom["name"], atom["resname"], "A", atom["resnum"], x, y, z, atom["t"])
-                // output_str = format!("{}{}", output_str, pdb_str);
+                write_pdb_line(
+                    &mut output_str,
+                    atom.index,
+                    &atom.name,
+                    &atom.resname,
+                    "A",
+                    atom.resnum,
+                    atom.coords,
+                    &atom.t,
+                );
             }
-
-            // TODO port iterate through this
-            // let ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            // for (water_shell, chain) in water_shells.zip(ascii_uppercase.into) {
-
-            // TODO port: mostly more pdb_str % ...
-            // }
-
-            // TODO port: what is this?
             // Get the index of the nex atom and residue
-            // i = atom["i"] + 1
-            // j = atom["resnum"] + 1
+            if let Some(last_atom) = self.molecules[0].atoms().last() {
+                i = last_atom.index + 1;
+                j = last_atom.resnum + 1;
+            }
         }
-        todo!()
+
+        let ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Equivalent to Python's string
+
+        for (water_shell, chain) in water_shells.zip(ascii_uppercase.chars().skip(1)) {
+            let mut j = 1;
+
+            for water in water_shell {
+                let c = water.coordinates();
+
+                write_pdb_line(
+                    &mut output_str,
+                    i,
+                    "O",
+                    "HOH",
+                    &chain.to_string(),
+                    j,
+                    c[0],
+                    "O",
+                )?;
+                write_pdb_line(
+                    &mut output_str,
+                    i + 1,
+                    "H1",
+                    "HOH",
+                    &chain.to_string(),
+                    j,
+                    c[1],
+                    "H",
+                )?;
+                write_pdb_line(
+                    &mut output_str,
+                    i + 2,
+                    "H2",
+                    "HOH",
+                    &chain.to_string(),
+                    j,
+                    c[2],
+                    "H",
+                )?;
+
+                i += 2;
+
+                if water_model == "tip5p" {
+                    write_pdb_line(
+                        &mut output_str,
+                        i + 3,
+                        "L1",
+                        "HOH",
+                        &chain.to_string(),
+                        j,
+                        c[3],
+                        "L",
+                    )?;
+                    write_pdb_line(
+                        &mut output_str,
+                        i + 4,
+                        "L2",
+                        "HOH",
+                        &chain.to_string(),
+                        j,
+                        c[4],
+                        "L",
+                    )?;
+
+                    i += 2;
+                }
+
+                i += 1;
+                j += 1;
+            }
+        }
+
+        // ... but we add it again at the end
+        output_str += "TER\n";
+
+        fs::write(fname, &output_str).expect("Failed to write file");
+
+        Ok(())
     }
 }
 
@@ -318,4 +397,29 @@ fn molecules_as_points(molecules: &[MoleculeType]) -> Vec<Vec3<f32>> {
         }
     }
     points
+}
+
+fn write_pdb_line(
+    output: &mut String,
+    atom_index: usize,
+    atom_name: &str,
+    atom_resname: &str,
+    a: &str,
+    atom_resnum: u32,
+    atom_xyz: Vec3<f32>,
+    atom_t: &str,
+) -> Result<()> {
+    Ok(write!(
+        output,
+        "ATOM  {:5}  {:<4}{:<3}{:<2}{:4}    {:8.3} {:8.3} {:8.3}  1.00  1.00          {:<2}\n",
+        atom_index,
+        atom_name,
+        atom_resname,
+        a,
+        atom_resnum,
+        atom_xyz.x,
+        atom_xyz.y,
+        atom_xyz.z,
+        atom_t
+    )?)
 }
