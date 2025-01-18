@@ -11,6 +11,7 @@ mod utils;
 mod water;
 mod waterbox;
 pub mod waterkit;
+use serde::{Deserialize, Serialize};
 
 #[pyfunction]
 fn process_atom(input: (i32, String, String, i32, String, [f32; 3], f32, String)) -> PyResult<()> {
@@ -45,10 +46,16 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
 #[pyfunction]
 fn process_molecule(input: PythonMolecule) -> PyResult<()> {
     println!("got molecule from python!: {:?}", input);
+    let res = save_molecule_json(&input, "./myreceptor.json");
+
+    if let Err(e) = res {
+        println!("e: {:?}", e);
+    }
+
     Ok(())
 }
 
-#[derive(Debug, FromPyObject)]
+#[derive(Debug, FromPyObject, Serialize, Deserialize)]
 struct PythonMolecule {
     #[pyo3(item)]
     atoms: Vec<(i32, String, String, i32, String, [f32; 3], f32, String)>,
@@ -88,6 +95,11 @@ pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
 
+use std::{
+    fs::File,
+    io::{Read, Write},
+};
+
 use pyo3::{prelude::*, types::PyTuple};
 
 #[pyfunction]
@@ -116,13 +128,33 @@ fn string_sum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
+fn save_molecule_json(molecule: &PythonMolecule, filename: &str) -> std::io::Result<()> {
+    let json_string = serde_json::to_string_pretty(molecule).unwrap();
+    let mut file = File::create(filename)?;
+    file.write_all(json_string.as_bytes())?;
+    Ok(())
+}
+
+fn load_molecule_json(filename: &str) -> std::io::Result<PythonMolecule> {
+    let mut file = File::open(filename)?;
+    let mut buffer = String::new();
+    file.read_to_string(&mut buffer)?;
+    let molecule: PythonMolecule = serde_json::from_str(&buffer).unwrap();
+    Ok(molecule)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn run_waterkit() {
+        // to not have to always start rust with python during development, we serialize some parameters and use that
+        let receptor_res = load_molecule_json("./dev_pars/myreceptor.json");
+        assert!(receptor_res.is_ok());
+        let receptor = receptor_res.unwrap();
+        println!("atoms: {}", receptor.atoms.len());
+        println!("hbs: {}", receptor.hydrogen_bonds.len());
+        println!("rbs: {}", receptor.rotatable_bonds.len());
     }
 }
