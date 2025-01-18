@@ -11,7 +11,10 @@ mod utils;
 mod water;
 mod waterbox;
 pub mod waterkit;
+use atom::{Atom, Bond, Molecule};
+use hydrogen_bonds::HydrogenBond;
 use serde::{Deserialize, Serialize};
+use vek::Vec3;
 
 #[pyfunction]
 fn process_atom(input: (i32, String, String, i32, String, [f32; 3], f32, String)) -> PyResult<()> {
@@ -45,7 +48,7 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
 // string_sum.process_molecule(molecule_for_rust)
 #[pyfunction]
 fn process_molecule(input: PythonMolecule) -> PyResult<()> {
-    println!("got molecule from python!: {:?}", input);
+    // println!("got molecule from python!: {:?}", input);
     let res = save_molecule_json(&input, "./myreceptor.json");
 
     if let Err(e) = res {
@@ -58,13 +61,13 @@ fn process_molecule(input: PythonMolecule) -> PyResult<()> {
 #[derive(Debug, FromPyObject, Serialize, Deserialize)]
 struct PythonMolecule {
     #[pyo3(item)]
-    atoms: Vec<(i32, String, String, i32, String, [f32; 3], f32, String)>,
+    atoms: Vec<(usize, String, String, u32, String, [f32; 3], f32, String)>,
     #[pyo3(item)]
-    hydrogen_bonds: Vec<(i32, [f32; 3], String, String)>,
+    hydrogen_bonds: Vec<(usize, [f32; 3], String, String)>,
     #[pyo3(item)]
     rotatable_bonds: Vec<(
-        i32,
-        i32,
+        usize,
+        usize,
         [f32; 3],
         [f32; 3],
         [f32; 3],
@@ -143,18 +146,85 @@ fn load_molecule_json(filename: &str) -> std::io::Result<PythonMolecule> {
     Ok(molecule)
 }
 
+pub fn to_molecule(python_mol: PythonMolecule) -> Molecule {
+    let atoms = python_mol
+        .atoms
+        .into_iter()
+        .map(|tuple| Atom {
+            index: tuple.0,
+            name: tuple.1.clone(),
+            resname: tuple.2.clone(),
+            resnum: tuple.3,
+            // tuple.4 not used?
+            coords: tuple.5.into(),
+            q: tuple.6,
+            t: tuple.7.clone(),
+        })
+        .collect::<Vec<Atom>>();
+
+    let hydrogen_bonds = Some(
+        python_mol
+            .hydrogen_bonds
+            .into_iter()
+            .map(|tuple| {
+                // (2, array([17.14364591, 39.8412896 , -4.20977717]), 'donor', 'H_N_000')
+                HydrogenBond {
+                    atom_i: tuple.0,
+                    vector_xyz: tuple.1.into(),
+                    anchor_type: tuple.2,
+                    atom_types: tuple.3,
+                }
+            })
+            .collect::<Vec<HydrogenBond>>(),
+    );
+
+    let rotatable_bonds = python_mol
+        .rotatable_bonds
+        .into_iter()
+        .map(|tuple| Bond {
+            atom_i: tuple.0,
+            atom_j: tuple.1,
+            // these 2 fields seem to be set later, in specific context
+            // TODO port review them and whether initialization to 0 is right
+            molecule_i: 0,
+            molecule_j: 0,
+            atom_i_xyz: tuple.2.into(),
+            atom_j_xyz: tuple.3.into(),
+            atom_k_xyz: tuple.4.into(),
+            atom_l_xyz: tuple.5.into(),
+        })
+        .collect::<Vec<Bond>>();
+    Molecule {
+        atoms,
+        hydrogen_bonds,
+        rotatable_bonds,
+        // TODO port: where to these come from, probably have to be passed from python too now
+        coordinates: vec![],
+        hb_anchor: Vec3::zero(),
+        hb_vector: Vec3::zero(),
+        hb_type: "".to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use run_waterkit::hydrate_rust;
 
-    #[test]
-    fn run_waterkit() {
+    use super::*;
+    #[tokio::test]
+    async fn run_waterkit() {
         // to not have to always start rust with python during development, we serialize some parameters and use that
-        let receptor_res = load_molecule_json("./dev_pars/myreceptor.json");
+        let receptor_res: Result<PythonMolecule, std::io::Error> =
+            load_molecule_json("./dev_pars/myreceptor.json");
         assert!(receptor_res.is_ok());
-        let receptor = receptor_res.unwrap();
-        println!("atoms: {}", receptor.atoms.len());
-        println!("hbs: {}", receptor.hydrogen_bonds.len());
-        println!("rbs: {}", receptor.rotatable_bonds.len());
+        let receptor_python = receptor_res.unwrap();
+        println!("atoms: {}", receptor_python.atoms.len());
+        println!("hbs: {}", receptor_python.hydrogen_bonds.len());
+        println!("rbs: {}", receptor_python.rotatable_bonds.len());
+
+        let receptor = to_molecule(receptor_python);
+
+        let res = hydrate_rust(receptor, "receptor_maps.fld", "traj", 100, 123, 20.).await;
+        println!("res: {:?}", res);
     }
 }

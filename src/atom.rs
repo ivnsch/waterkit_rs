@@ -138,7 +138,6 @@ pub struct Bond {
     pub atom_j: usize,
     pub molecule_i: usize,
     pub molecule_j: usize,
-
     pub atom_i_xyz: Vec3<f32>,
     pub atom_j_xyz: Vec3<f32>,
     pub atom_k_xyz: Vec3<f32>,

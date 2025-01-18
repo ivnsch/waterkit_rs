@@ -12,7 +12,7 @@ use vek::Vec3;
 // TODO async + pyfunction: "experimental feature"
 // #[pyfunction]
 pub async fn hydrate_rust(
-    receptor_pdbqt_file: &str,
+    receptor: Molecule,
     fld_file: &str,
     output_dir: &str,
     n_frames: usize,
@@ -20,13 +20,9 @@ pub async fn hydrate_rust(
     temperature: f32,
 ) -> Result<()> {
     println!(
-        "called hydrate: receptor_pdbqt_file: {}, fld_path: {}, output_dir: {}, n_frames: {}, n_layer: {}",
-        receptor_pdbqt_file, fld_file, output_dir, n_frames, n_layer
+        "called hydrate: fld_path: {}, output_dir: {}, n_frames: {}, n_layer: {}",
+        fld_file, output_dir, n_frames, n_layer
     );
-
-    // let (mut pdbqt, _errors) = pdbtbx::open("protein_prepared_amber.pdbqt").unwrap();
-    let (pdbqt, _errors) = pdbtbx::open(receptor_pdbqt_file).unwrap();
-    let receptor = to_molecule(pdbqt);
 
     let parsed_fld = parse_fld(fld_file).await?;
     let map = Map::new(parsed_fld.map_files, parsed_fld.labels).await?;
@@ -78,24 +74,5 @@ pub fn to_molecule(pdbqt: PDB) -> Molecule {
         hb_vector: Vec3::zero(),
         // TODO port
         hb_type: "".to_string(),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::hydrate_rust;
-
-    #[tokio::test]
-    async fn run() {
-        let res = hydrate_rust(
-            "protein_prepared_amber.pdbqt",
-            "receptor_maps.fld",
-            "traj",
-            100,
-            123,
-            20.,
-        )
-        .await;
-        println!("res: {:?}", res);
     }
 }
