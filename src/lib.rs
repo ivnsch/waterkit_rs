@@ -32,6 +32,41 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
     Ok(())
 }
 
+// python:
+// receptor_atoms_tuples = [tuple(atom) for atom in receptor.atoms]
+// hydrogen_bond_tuples = list(receptor.hydrogen_bonds.itertuples(index=False, name=None))
+// rotatable_bond_tuples = list(receptor.rotatable_bonds.itertuples(index=False, name=None))
+// molecule_for_rust = {
+//     "atoms": receptor_atoms_tuples,
+//     "hydrogen_bonds": hydrogen_bond_tuples,
+//     "rotatable_bonds": rotatable_bond_tuples
+// }
+// string_sum.process_molecule(molecule_for_rust)
+#[pyfunction]
+fn process_molecule(input: PythonMolecule) -> PyResult<()> {
+    println!("got molecule from python!: {:?}", input);
+    Ok(())
+}
+
+#[derive(Debug, FromPyObject)]
+struct PythonMolecule {
+    #[pyo3(item)]
+    atoms: Vec<(i32, String, String, i32, String, [f32; 3], f32, String)>,
+    #[pyo3(item)]
+    hydrogen_bonds: Vec<(i32, [f32; 3], String, String)>,
+    #[pyo3(item)]
+    rotatable_bonds: Vec<(
+        i32,
+        i32,
+        [f32; 3],
+        [f32; 3],
+        [f32; 3],
+        [f32; 3],
+        Vec<i32>,
+        String,
+    )>,
+}
+
 #[pyfunction]
 fn process_rotatable_bonds(
     input: Vec<(
@@ -77,6 +112,7 @@ fn string_sum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(process_atom_list, m)?)?;
     m.add_function(wrap_pyfunction!(process_hydrogen_bonds, m)?)?;
     m.add_function(wrap_pyfunction!(process_rotatable_bonds, m)?)?;
+    m.add_function(wrap_pyfunction!(process_molecule, m)?)?;
     Ok(())
 }
 
