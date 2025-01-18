@@ -26,3 +26,4 @@ pdbtbx = { path = "../pdbtbx" }
 anyhow = "1.0.95"
 tokio = { version = "1.36", features = ["macros", "rt-multi-thread"] }
 openbabel = "0.5.3"
+regex = "1.11.1"
