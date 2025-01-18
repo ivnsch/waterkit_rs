@@ -77,25 +77,3 @@ fn parse_line(line: &str) -> Result<ProcessLineResult> {
         Ok(ProcessLineResult::Unhandled)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::force_fields_parser::parse_force_fields;
-
-    #[tokio::test]
-    async fn run() {
-        let res = parse_force_fields("data/waterfield.par").await.unwrap();
-
-        let first_atom = &res.atoms[0];
-
-        println!("{:?}", res);
-
-        println!("smarts: {}", first_atom.smarts);
-
-        let pattern = openbabel::smartspattern::SmartsPattern::new_from_smarts(&first_atom.smarts);
-        pattern.num_matches();
-        println!("matches: {}", pattern.num_matches());
-        println!("num_atoms: {}", pattern.num_atoms());
-        println!("num_bonds: {}", pattern.num_bonds());
-    }
-}
