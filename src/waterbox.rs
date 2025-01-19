@@ -182,8 +182,8 @@ impl WaterBox {
         let sw_type = "SW";
         let partial_charge = 0.0;
 
-        let shell_id = self.data.shells.len();
-        let molecules = self.molecules_in_shell(Some(&[]));
+        let shell_id = self.number_of_shells();
+        let molecules = self.molecules_in_shell(Some(&[shell_id]));
 
         let mut waters = self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
 
@@ -245,8 +245,16 @@ impl WaterBox {
             .collect()
     }
 
+    // TODO port: this is bit misleading name/functionality in original implementation
+    // if we have e.g. shell 0, it returns 0, but number of shells is not 0
     pub fn number_of_shells(&self) -> usize {
-        self.data.shells.len()
+        // TODO port: return Option - not ok to default to 0
+        self.data
+            .shells
+            .iter()
+            .map(|s| s.shell_id)
+            .max()
+            .unwrap_or(0)
     }
 
     /// Write all the content of the water box in a PDB file.
