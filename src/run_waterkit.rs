@@ -14,19 +14,18 @@ use vek::Vec3;
 pub async fn hydrate_rust(
     receptor: Molecule,
     water_molecule: Molecule,
-    fld_file: &str,
+    map: Map,
     output_dir: &str,
     n_frames: usize,
     n_layer: usize,
     temperature: f32,
 ) -> Result<()> {
     println!(
-        "called hydrate: fld_path: {}, output_dir: {}, n_frames: {}, n_layer: {}",
-        fld_file, output_dir, n_frames, n_layer
+        "called hydrate: output_dir: {}, n_frames: {}, n_layer: {}",
+        output_dir, n_frames, n_layer
     );
 
-    let parsed_fld = parse_fld(fld_file).await?;
-    let map = Map::new(parsed_fld.map_files, parsed_fld.labels).await?;
+    println!("!! map: {:?}", map);
 
     // TODO port: spherical_water_map
 

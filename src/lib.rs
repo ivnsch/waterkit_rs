@@ -11,7 +11,9 @@ mod utils;
 mod water;
 mod waterbox;
 pub mod waterkit;
+use anyhow::Result;
 use atom::{Atom, Bond, Molecule};
+use autodock_map::Map;
 use hydrogen_bonds::HydrogenBond;
 use serde::{Deserialize, Serialize};
 use vek::Vec3;
@@ -36,6 +38,12 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
     Ok(())
 }
 
+#[pyfunction]
+fn process_ad_map(input: PythonAdMap) -> PyResult<()> {
+    println!("got ad map from python!: {:?}", input);
+    Ok(())
+}
+
 // python:
 // receptor_atoms_tuples = [tuple(atom) for atom in receptor.atoms]
 // hydrogen_bond_tuples = list(receptor.hydrogen_bonds.itertuples(index=False, name=None))
@@ -48,9 +56,14 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
 // (same for water)
 // string_sum.process_molecules(receptor_for_rust, water_for_rust)
 #[pyfunction]
-fn process_molecules(receptor: PythonMolecule, water: PythonMolecule) -> PyResult<()> {
+fn save_parameters(
+    receptor: PythonMolecule,
+    water: PythonMolecule,
+    ad_map: PythonAdMap,
+) -> PyResult<()> {
     let receptor_res = save_molecule_json(&receptor, "./myreceptor.json");
     let water_res = save_molecule_json(&water, "./mywater_molecule.json");
+    let map_res = save_ad_map_json(&ad_map, "./my_ad_map.json");
 
     println!("water from python: {:?}", water);
 
@@ -59,6 +72,9 @@ fn process_molecules(receptor: PythonMolecule, water: PythonMolecule) -> PyResul
     }
     if let Err(e) = water_res {
         println!("e with water: {:?}", e);
+    }
+    if let Err(e) = map_res {
+        println!("e with ad map: {:?}", e);
     }
 
     Ok(())
@@ -81,6 +97,20 @@ struct PythonMolecule {
         Vec<i32>,
         String,
     )>,
+}
+
+#[derive(Debug, FromPyObject, Serialize, Deserialize)]
+struct PythonAdMap {
+    #[pyo3(item)]
+    box_center: [f32; 3],
+    #[pyo3(item)]
+    box_size: [usize; 3],
+    #[pyo3(item)]
+    box_spacing: f32,
+    #[pyo3(item)]
+    labels: Vec<String>,
+    #[pyo3(item)]
+    files: Vec<String>,
 }
 
 #[pyfunction]
@@ -133,7 +163,8 @@ fn string_sum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(process_atom_list, m)?)?;
     m.add_function(wrap_pyfunction!(process_hydrogen_bonds, m)?)?;
     m.add_function(wrap_pyfunction!(process_rotatable_bonds, m)?)?;
-    m.add_function(wrap_pyfunction!(process_molecules, m)?)?;
+    m.add_function(wrap_pyfunction!(save_parameters, m)?)?;
+    m.add_function(wrap_pyfunction!(process_ad_map, m)?)?;
     Ok(())
 }
 
@@ -149,6 +180,21 @@ fn load_molecule_json(filename: &str) -> std::io::Result<PythonMolecule> {
     let mut buffer = String::new();
     file.read_to_string(&mut buffer)?;
     let molecule: PythonMolecule = serde_json::from_str(&buffer).unwrap();
+    Ok(molecule)
+}
+
+fn save_ad_map_json(ad_map: &PythonAdMap, filename: &str) -> std::io::Result<()> {
+    let json_string = serde_json::to_string_pretty(ad_map).unwrap();
+    let mut file = File::create(filename)?;
+    file.write_all(json_string.as_bytes())?;
+    Ok(())
+}
+
+fn load_ad_map_json(filename: &str) -> std::io::Result<PythonAdMap> {
+    let mut file = File::open(filename)?;
+    let mut buffer = String::new();
+    file.read_to_string(&mut buffer)?;
+    let molecule: PythonAdMap = serde_json::from_str(&buffer).unwrap();
     Ok(molecule)
 }
 
@@ -211,6 +257,10 @@ pub fn to_molecule(python_mol: PythonMolecule) -> Molecule {
     }
 }
 
+async fn to_map(python_map: PythonAdMap) -> Result<Map> {
+    Map::new(python_map.files, python_map.labels).await
+}
+
 #[cfg(test)]
 mod tests {
     use run_waterkit::hydrate_rust;
@@ -237,7 +287,12 @@ mod tests {
         println!("water rbs: {}", water_python.rotatable_bonds.len());
         let water = to_molecule(water_python);
 
-        let res = hydrate_rust(receptor, water, "receptor_maps.fld", "traj", 100, 123, 20.).await;
+        let ad_map_res = load_ad_map_json("./dev_pars/my_ad_map.json");
+        assert!(ad_map_res.is_ok());
+        let ad_map_python = ad_map_res.unwrap();
+        let ad_map = to_map(ad_map_python).await.unwrap();
+
+        let res = hydrate_rust(receptor, water, ad_map, "traj", 100, 123, 20.).await;
         println!("res: {:?}", res);
     }
 }

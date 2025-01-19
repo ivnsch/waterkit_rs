@@ -89,5 +89,5 @@ fn parse_line(line: &str) -> ProcessLineResult {
 #[derive(Default, Debug, Clone)]
 pub struct ParsedFld {
     pub labels: Vec<String>,
-    pub map_files: Vec<String>,
+    pub map_files: Vec<String>, // file names
 }
