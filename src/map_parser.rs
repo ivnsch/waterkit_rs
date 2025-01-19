@@ -72,7 +72,7 @@ enum ProcessLineResult {
 }
 
 fn parse_line(line: &str) -> Result<ProcessLineResult> {
-    println!("{}", line);
+    // println!("{}", line);
     if line.starts_with("SPACING") {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         let spacing = parts[1].parse()?;
