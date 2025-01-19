@@ -4,8 +4,6 @@ pub fn hydrate_single(water_box: &mut WaterBox, n_layer: usize, frame_id: usize,
     // Single job waterkit hydration.
     let mut i = 1;
 
-    println!("frame id: {}", frame_id);
-
     loop {
         // build_next_shell returns True if
         // it was able to put water molecules,
