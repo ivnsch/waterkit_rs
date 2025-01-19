@@ -637,7 +637,7 @@ impl WaterSampler {
             .map(|&point| point - origin)
             .collect::<Vec<Vec3<f32>>>();
 
-        let q = utils::quaternion_rotate(&translated_water, &self.water_ref.coordinates);
+        let q = utils::quaternion_rotate(&translated_water, &self.water_ref.coordinates(None));
 
         // Define the vector to rotate
         let vec = Vector3::new(0.0, 1.0, 0.0);

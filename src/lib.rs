@@ -205,7 +205,6 @@ pub fn to_molecule(python_mol: PythonMolecule) -> Molecule {
         hydrogen_bonds,
         rotatable_bonds,
         // TODO port: where to these come from, probably have to be passed from python too now
-        coordinates: vec![],
         hb_anchor: Vec3::zero(),
         hb_vector: Vec3::zero(),
         hb_type: "".to_string(),

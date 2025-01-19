@@ -69,7 +69,6 @@ pub fn to_molecule(pdbqt: PDB) -> Molecule {
         atoms: mol_atoms,
         hydrogen_bonds: None,
         rotatable_bonds: vec![],
-        coordinates: vec![],
         // TODO port
         hb_anchor: Vec3::zero(),
         // TODO port

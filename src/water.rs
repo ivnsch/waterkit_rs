@@ -52,7 +52,6 @@ impl Water {
                 atoms: vec![],
                 hydrogen_bonds: Some(vec![]),
                 rotatable_bonds: vec![],
-                coordinates: vec![*xyz],
                 hb_anchor,
                 hb_vector,
                 hb_type,
@@ -93,6 +92,10 @@ impl Water {
 
     pub fn hydrogen_bonds(&self) -> Option<Vec<HydrogenBond>> {
         self.molecule.hydrogen_bonds.clone()
+    }
+
+    pub fn coordinates(&self, atom_ids: Option<&[usize]>) -> Vec<Vec3<f32>> {
+        self.molecule.coordinates(atom_ids)
     }
 }
 

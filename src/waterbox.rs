@@ -154,9 +154,7 @@ impl WaterBox {
             if let Some(bonds) = &molecule.hydrogen_bonds() {
                 for bond in bonds {
                     // Add water molecule only if it's in the map
-                    // TODO what structure is this? for now removing the [0]
-                    // let anchor_xyz = molecule.coordinates[bond.atom_i][0];
-                    let anchor_xyz = molecule.coordinates()[bond.atom_i];
+                    let anchor_xyz = molecule.coordinates(Some(&[bond.atom_i]))[0];
 
                     if self.map.is_in_map(anchor_xyz) {
                         let w = Water::new(
@@ -304,7 +302,7 @@ impl WaterBox {
             let mut j = 1;
 
             for water in water_shell {
-                let c = water.coordinates();
+                let c = water.coordinates(None);
 
                 write_pdb_line(
                     &mut output_str,

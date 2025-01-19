@@ -43,10 +43,10 @@ impl MoleculeType {
         }
     }
 
-    pub fn coordinates(&self) -> Vec<Vec3<f32>> {
+    pub fn coordinates(&self, atom_ids: Option<&[usize]>) -> Vec<Vec3<f32>> {
         match self {
-            MoleculeType::Receptor(m) => m.coordinates.clone(),
-            MoleculeType::Water(w) => w.coordinates.clone(),
+            MoleculeType::Receptor(m) => m.coordinates(atom_ids).clone(),
+            MoleculeType::Water(w) => w.coordinates(atom_ids).clone(),
         }
     }
 }
@@ -56,7 +56,6 @@ pub struct Molecule {
     pub atoms: Vec<Atom>,
     pub hydrogen_bonds: Option<Vec<HydrogenBond>>,
     pub rotatable_bonds: Vec<Bond>,
-    pub coordinates: Vec<Vec3<f32>>,
 
     pub hb_anchor: Vec3<f32>,
     pub hb_vector: Vec3<f32>,
@@ -65,6 +64,26 @@ pub struct Molecule {
 }
 
 impl Molecule {
+    /// Return coordinates of all atoms or a certain atom
+    /// Args:
+    ///     atom_ids (int, list): index of one or multiple atoms
+    /// Returns:
+    ///     ndarray: 2d ndarray of 3d coordinates
+    pub fn coordinates(&self, atom_ids: Option<&[usize]>) -> Vec<Vec3<f32>> {
+        if let Some(atom_ids) = atom_ids {
+            // -1 because we use 0 based indices
+            let atom_ids_minus_1: Vec<usize> = atom_ids.iter().map(|a| a - 1).collect();
+            self.atoms
+                .iter()
+                .enumerate()
+                .filter(|(index, _)| atom_ids_minus_1.contains(&index))
+                .map(|(_, a)| a.coords)
+                .collect()
+        } else {
+            self.atoms.iter().map(|a| a.coords).collect()
+        }
+    }
+
     /// Update the coordinates of an atom.
     /// Args:
     ///     xyz (array_like): 3d coordinates of the new atomic position
@@ -100,7 +119,7 @@ impl Molecule {
     /// Returns:
     ///     None
     pub fn translate(&mut self, vector: &Vec3<f32>) {
-        let water_xyz: Vec<Vec3<f32>> = self.coordinates.iter().map(|c| c + vector).collect();
+        let water_xyz: Vec<Vec3<f32>> = self.coordinates(None).iter().map(|c| c + vector).collect();
 
         for (atom_id, coord) in water_xyz.iter().enumerate() {
             // TODO port: omitting + 1, review
