@@ -24,5 +24,6 @@ pub fn hydrate_single(water_box: &mut WaterBox, n_layer: usize, frame_id: usize,
     }
 
     let output_filename = format!("{}/water_{:06}.pdb", output_dir, frame_id + 1);
+    println!("will write a frame: {}", output_filename);
     water_box.to_pdb(&output_filename, "tip3p", false);
 }
