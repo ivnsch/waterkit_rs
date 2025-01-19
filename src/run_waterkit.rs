@@ -13,6 +13,7 @@ use vek::Vec3;
 // #[pyfunction]
 pub async fn hydrate_rust(
     receptor: Molecule,
+    water_molecule: Molecule,
     fld_file: &str,
     output_dir: &str,
     n_frames: usize,
@@ -30,7 +31,8 @@ pub async fn hydrate_rust(
     // TODO port: spherical_water_map
 
     // println!("receptor: {:?}", receptor);
-    let mut water_box_res = WaterBox::new(receptor, map, temperature, "tip3p", None).await;
+    let mut water_box_res =
+        WaterBox::new(receptor, water_molecule, map, temperature, "tip3p", None).await;
 
     println!("will iterate over {} frames", n_frames);
     match water_box_res {

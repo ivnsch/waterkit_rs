@@ -35,6 +35,7 @@ pub struct BoxData {
 impl WaterBox {
     pub async fn new(
         receptor: Molecule,
+        water_molecule: Molecule,
         map: Map,
         temperature: f32,
         water_model: &str,
@@ -49,6 +50,7 @@ impl WaterBox {
             90.,
             0.,
             water_model,
+            water_molecule,
         )
         .await?;
 

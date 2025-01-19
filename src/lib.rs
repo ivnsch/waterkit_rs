@@ -40,19 +40,25 @@ fn process_hydrogen_bonds(input: Vec<(i32, [f32; 3], String, String)>) -> PyResu
 // receptor_atoms_tuples = [tuple(atom) for atom in receptor.atoms]
 // hydrogen_bond_tuples = list(receptor.hydrogen_bonds.itertuples(index=False, name=None))
 // rotatable_bond_tuples = list(receptor.rotatable_bonds.itertuples(index=False, name=None))
-// molecule_for_rust = {
+// receptor_for_rust = {
 //     "atoms": receptor_atoms_tuples,
 //     "hydrogen_bonds": hydrogen_bond_tuples,
 //     "rotatable_bonds": rotatable_bond_tuples
 // }
-// string_sum.process_molecule(molecule_for_rust)
+// (same for water)
+// string_sum.process_molecules(receptor_for_rust, water_for_rust)
 #[pyfunction]
-fn process_molecule(input: PythonMolecule) -> PyResult<()> {
-    // println!("got molecule from python!: {:?}", input);
-    let res = save_molecule_json(&input, "./myreceptor.json");
+fn process_molecules(receptor: PythonMolecule, water: PythonMolecule) -> PyResult<()> {
+    let receptor_res = save_molecule_json(&receptor, "./myreceptor.json");
+    let water_res = save_molecule_json(&water, "./mywater_molecule.json");
 
-    if let Err(e) = res {
-        println!("e: {:?}", e);
+    println!("water from python: {:?}", water);
+
+    if let Err(e) = receptor_res {
+        println!("e with receptor: {:?}", e);
+    }
+    if let Err(e) = water_res {
+        println!("e with water: {:?}", e);
     }
 
     Ok(())
@@ -127,7 +133,7 @@ fn string_sum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(process_atom_list, m)?)?;
     m.add_function(wrap_pyfunction!(process_hydrogen_bonds, m)?)?;
     m.add_function(wrap_pyfunction!(process_rotatable_bonds, m)?)?;
-    m.add_function(wrap_pyfunction!(process_molecule, m)?)?;
+    m.add_function(wrap_pyfunction!(process_molecules, m)?)?;
     Ok(())
 }
 
@@ -218,13 +224,21 @@ mod tests {
             load_molecule_json("./dev_pars/myreceptor.json");
         assert!(receptor_res.is_ok());
         let receptor_python = receptor_res.unwrap();
-        println!("atoms: {}", receptor_python.atoms.len());
-        println!("hbs: {}", receptor_python.hydrogen_bonds.len());
-        println!("rbs: {}", receptor_python.rotatable_bonds.len());
-
+        println!("receptor atoms: {}", receptor_python.atoms.len());
+        println!("receptor hbs: {}", receptor_python.hydrogen_bonds.len());
+        println!("receptor rbs: {}", receptor_python.rotatable_bonds.len());
         let receptor = to_molecule(receptor_python);
 
-        let res = hydrate_rust(receptor, "receptor_maps.fld", "traj", 100, 123, 20.).await;
+        let water_res: Result<PythonMolecule, std::io::Error> =
+            load_molecule_json("./dev_pars/mywater_molecule.json");
+        assert!(water_res.is_ok());
+        let water_python = water_res.unwrap();
+        println!("water atoms: {}", water_python.atoms.len());
+        println!("water hbs: {}", water_python.hydrogen_bonds.len());
+        println!("water rbs: {}", water_python.rotatable_bonds.len());
+        let water = to_molecule(water_python);
+
+        let res = hydrate_rust(receptor, water, "receptor_maps.fld", "traj", 100, 123, 20.).await;
         println!("res: {:?}", res);
     }
 }

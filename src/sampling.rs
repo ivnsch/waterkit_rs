@@ -40,6 +40,7 @@ impl WaterSampler {
         angle: f32,
         energy_cutoff: f32,
         water_model: &str,
+        water_molecule: Molecule,
     ) -> Result<WaterSampler> {
         // Water grids
         let mut map_list = vec![];
@@ -48,14 +49,13 @@ impl WaterSampler {
         map_list.push(spherical_water_map);
 
         // Explicit water grids
-        let (atom_types, map_files, water_ref_file) = match water_model {
+        let (atom_types, map_files) = match water_model {
             "tip3p" => (
                 vec!["SW", "OW", "HW"],
                 vec![
                     "data/water/tip3p/water_OW.map",
                     "data/water/tip3p/water_HW.map",
                 ],
-                "data/water/tip3p/water.pdbqt",
             ),
             "tip5p" => (
                 vec!["SW", "OT", "HT", "LP"],
@@ -65,15 +65,11 @@ impl WaterSampler {
                     "data/water/tip5p/water_LP.map",
                     "data/water/tip3p/water_HW.map",
                 ],
-                "data/water/tip5p/water.pdbqt",
             ),
             // TODO enum
             _ => panic!("not supported water model"),
         };
         map_list.extend(map_files);
-
-        let (pdbqt, _errors) = pdbtbx::open(water_ref_file).unwrap();
-        let water_ref = to_molecule(pdbqt);
 
         Ok(WaterSampler {
             // initialized via a setter, since circular reference
@@ -89,9 +85,7 @@ impl WaterSampler {
             water_model: water_model.to_string(),
             angle,
             water_orientations: vec![],
-            // TODO port: self._water_ref = Molecule.from_file(water_ref_file)
-            // for now initializing to some empty defaults
-            water_ref,
+            water_ref: water_molecule,
             water_map: Map::new(
                 map_list.into_iter().map(|s| s.to_string()).collect(),
                 atom_types.into_iter().map(|s| s.to_string()).collect(),
