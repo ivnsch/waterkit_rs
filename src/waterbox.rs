@@ -266,10 +266,7 @@ impl WaterBox {
         let mut output_str = String::new();
 
         let shell_id = self.number_of_shells();
-        let water_shells = (1..=shell_id).map(|i| self.molecules_in_shell(Some(&vec![shell_id])));
-
-        const PDB_FORMAT: &str =
-            "ATOM  {:5}  {:<4}{:<3}{:<2}{:4}    {:8.3} {:8.3} {:8.3}  1.00  1.00          {:<2}\n";
+        let water_shells = (1..=shell_id).map(|_| self.molecules_in_shell(Some(&vec![shell_id])));
 
         if include_receptor {
             let atoms = self.molecules[0].atoms();
@@ -283,7 +280,7 @@ impl WaterBox {
                     atom.resnum,
                     atom.coords,
                     &atom.t,
-                );
+                )?;
             }
             // Get the index of the nex atom and residue
             if let Some(last_atom) = self.molecules[0].atoms().last() {
@@ -295,7 +292,7 @@ impl WaterBox {
         let ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Equivalent to Python's string
 
         for (water_shell, chain) in water_shells.zip(ascii_uppercase.chars().skip(1)) {
-            let mut j = 1;
+            j = 1;
 
             for water in water_shell {
                 let c = water.coordinates(None);
