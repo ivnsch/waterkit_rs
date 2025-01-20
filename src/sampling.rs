@@ -408,7 +408,7 @@ impl WaterSampler {
                                 .flatten()
                         })
                         .collect::<Vec<Vec<f32>>>();
-                    let mut energy_waters: Vec<f32> = energy_waters_nested
+                    let energy_waters: Vec<f32> = energy_waters_nested
                         .into_iter()
                         .flat_map(|v| v.into_iter())
                         .collect();
