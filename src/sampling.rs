@@ -217,7 +217,7 @@ impl WaterSampler {
         (waters.to_vec(), df)
     }
 
-    fn neighbors_points_grid(
+    fn neighbor_points_grid(
         &self,
         water: &Water,
         from_edges: Option<f32>,
@@ -291,7 +291,7 @@ impl WaterSampler {
         let mut energies = vec![];
 
         for water in waters {
-            let (_, mut energy_sphere) = self.neighbors_points_grid(water, from_edges);
+            let (_, mut energy_sphere) = self.neighbor_points_grid(water, from_edges);
 
             if !energy_sphere.is_empty() {
                 // TODO port: what's the goal of this? maybe another way than using inf?
@@ -344,7 +344,7 @@ impl WaterSampler {
         assert_eq!(1, oxygen_type.len());
         let oxygen_type = oxygen_type.first().unwrap();
 
-        let (coord_sphere, mut energy_sphere) = self.neighbors_points_grid(water, from_edges);
+        let (coord_sphere, mut energy_sphere) = self.neighbor_points_grid(water, from_edges);
 
         if !energy_sphere.is_empty() {
             // Pick position based on Boltzmann choices
