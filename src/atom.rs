@@ -32,7 +32,7 @@ impl MoleculeType {
     pub fn atoms(&self) -> Vec<Atom> {
         match self {
             MoleculeType::Receptor(Molecule { atoms, .. }) => atoms.clone(),
-            MoleculeType::Water(Water { atoms, .. }) => atoms.clone(),
+            MoleculeType::Water(water) => water.atoms().to_owned(),
         }
     }
 

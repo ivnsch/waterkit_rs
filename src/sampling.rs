@@ -403,7 +403,7 @@ impl WaterSampler {
                         .iter()
                         .map(|w| {
                             self.ad_map
-                                .energy(&w.atoms, vec![], false, true, true, "linear", true)
+                                .energy(&w.atoms(), vec![], false, true, true, "linear", true)
                                 .flatten()
                         })
                         .collect::<Vec<Vec<f32>>>();
@@ -450,7 +450,7 @@ impl WaterSampler {
                             .iter()
                             .map(|w| {
                                 self.ad_map
-                                    .energy(&w.atoms, vec![], false, true, true, "linear", true)
+                                    .energy(&w.atoms(), vec![], false, true, true, "linear", true)
                                     .flatten()
                             })
                             .collect::<Vec<Vec<f32>>>();
@@ -562,7 +562,7 @@ impl WaterSampler {
         // of the current water molecule.
         let current_energy =
             self.ad_map
-                .energy(&water.atoms, vec![], false, true, true, "linear", true);
+                .energy(&water.atoms(), vec![], false, true, true, "linear", true);
 
         current_energy.flatten()
     }

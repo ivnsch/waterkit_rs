@@ -7,7 +7,6 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Water {
-    pub atoms: Vec<Atom>,
     pub hb_anchor: Vec3<f32>,
     pub hb_vector: Vec3<f32>,
     pub hb_type: String,
@@ -42,14 +41,13 @@ impl Water {
         // Add the oxygen atom
 
         Water {
-            atoms: vec![create_atom(0, xyz, atom_type, partial_charge)],
             hb_anchor,
             hb_vector,
             hb_type: hb_type.clone(),
             // TODO port: inheritance: trait? this composition not looking good
             coordinates: vec![*xyz],
             molecule: Molecule {
-                atoms: vec![],
+                atoms: vec![create_atom(0, xyz, atom_type, partial_charge)],
                 hydrogen_bonds: Some(vec![]),
                 rotatable_bonds: vec![],
                 hb_anchor,
@@ -60,8 +58,8 @@ impl Water {
     }
 
     fn add_atom(&mut self, xyz: &Vec3<f32>, atom_type: &String, partial_charge: f32) {
-        let atom = create_atom(self.atoms.len(), xyz, atom_type, partial_charge);
-        self.atoms.push(atom);
+        let atom = create_atom(self.atoms().len(), xyz, atom_type, partial_charge);
+        self.atoms_mut().push(atom);
     }
 
     pub fn build_explicit_water(&mut self, water_model: &str) -> bool {
@@ -96,6 +94,14 @@ impl Water {
 
     pub fn coordinates(&self, atom_ids: Option<&[usize]>) -> Vec<Vec3<f32>> {
         self.molecule.coordinates(atom_ids)
+    }
+
+    pub fn atoms(&self) -> &Vec<Atom> {
+        &self.molecule.atoms
+    }
+
+    pub fn atoms_mut(&mut self) -> &mut Vec<Atom> {
+        &mut self.molecule.atoms
     }
 }
 
