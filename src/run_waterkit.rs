@@ -25,8 +25,6 @@ pub async fn hydrate_rust(
         output_dir, n_frames, n_layer
     );
 
-    println!("!! map: {:?}", map);
-
     // TODO port: spherical_water_map
 
     // println!("receptor: {:?}", receptor);

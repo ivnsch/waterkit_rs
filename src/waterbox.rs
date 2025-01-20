@@ -184,6 +184,7 @@ impl WaterBox {
         let molecules = self.molecules_in_shell(Some(&[shell_id]));
 
         let mut waters = self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
+        // println!("!! waters: {}", waters.len());
 
         // Only the receptor contains disordered hydrogens
         let (w, df) = if shell_id == 0 {
@@ -205,12 +206,7 @@ impl WaterBox {
                 .collect::<Vec<MoleculeType>>();
             self.add_molecules(&molecules, false);
             // Add informations about the new shell
-            // TODO port: review, is this the same?
-            if !self.data.shells.is_empty() {
-                self.data.shells.extend(df.shells);
-            }
-            // if "shells" in df.keys():
-            // self._add_informations(df["shells"], "shells")
+            self.data.shells.extend(df.shells);
             true
         } else {
             false
