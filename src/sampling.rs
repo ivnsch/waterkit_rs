@@ -113,7 +113,7 @@ impl WaterSampler {
     pub fn sample_grid(
         &mut self,
         mut waters: &[Water],
-        connections: &mut [Bond],
+        connections: Option<&mut [Bond]>,
         opt_disordered: bool,
     ) -> (Vec<Water>, BoxData) {
         // Optimize position of water molecules.
@@ -133,8 +133,10 @@ impl WaterSampler {
             let add_noise = true;
 
             // TODO port: connections dataframe etc
-            if opt_disordered {
-                self.optimize_disordered_waters(waters, connections);
+            if let Some(connections) = &connections {
+                if opt_disordered {
+                    self.optimize_disordered_waters(waters, connections);
+                }
             }
 
             // The placement order is based on the best energy around each hydrogen anchor point
@@ -198,8 +200,7 @@ impl WaterSampler {
             }
 
             // Keep connections of the good waters
-            // TODO port: note it's if connections is not None: - maybe declare it as option?
-            if !connections.is_empty() {
+            if let Some(connections) = connections {
                 let mut connections_vec = connections.to_vec();
                 connections_vec.retain(|connection| {
                     !unfavorable_water_indices.contains(&connection.molecule_j)
@@ -763,12 +764,7 @@ fn generate_float_range(start: f32, end: f32, step: f32) -> Vec<f32> {
 fn filter_and_extract_molecule_j<'a>(connections: &'a [Bond], bond: &Bond) -> Vec<usize> {
     connections
         .iter()
-        .filter(|&conn| {
-            conn.atom_i == bond.atom_i
-                || conn.atom_i == bond.atom_j
-                || conn.atom_j == bond.atom_i
-                || conn.atom_j == bond.atom_j
-        })
+        .filter(|&conn| conn.atom_i == bond.atom_i || Some(conn.atom_i) == bond.atom_j)
         .map(|b| b.molecule_j) // Extract molecule_j
         .collect()
 }

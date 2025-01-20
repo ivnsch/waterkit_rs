@@ -235,7 +235,7 @@ pub fn to_molecule(python_mol: PythonMolecule) -> Molecule {
         .into_iter()
         .map(|tuple| Bond {
             atom_i: tuple.0,
-            atom_j: tuple.1,
+            atom_j: Some(tuple.1),
             // these 2 fields seem to be set later, in specific context
             // TODO port review them and whether initialization to 0 is right
             molecule_i: 0,

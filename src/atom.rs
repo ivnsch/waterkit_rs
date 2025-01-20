@@ -168,9 +168,10 @@ impl Molecule {
 #[derive(Debug, Clone)]
 pub struct Bond {
     pub atom_i: usize,
-    pub atom_j: usize,
+    pub atom_j: Option<usize>,
     pub molecule_i: usize,
     pub molecule_j: usize,
+    // these should be options too, sometimes using defaults (zero) instead
     pub atom_i_xyz: Vec3<f32>,
     pub atom_j_xyz: Vec3<f32>,
     pub atom_k_xyz: Vec3<f32>,

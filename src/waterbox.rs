@@ -147,10 +147,11 @@ impl WaterBox {
         molecules: &[MoleculeType],
         atom_type: &str,
         partial_charge: f32,
-    ) -> Vec<Water> {
+    ) -> (Vec<Water>, Vec<Bond>) {
         let mut waters = vec![];
+        let mut data = vec![];
 
-        for molecule in molecules {
+        for (i, molecule) in molecules.iter().enumerate() {
             if let Some(bonds) = &molecule.hydrogen_bonds() {
                 for bond in bonds {
                     // Add water molecule only if it's in the map
@@ -167,10 +168,22 @@ impl WaterBox {
                         );
                         waters.push(w);
                     }
+
+                    data.push(Bond {
+                        atom_i: bond.atom_i,
+                        atom_j: None,
+                        molecule_i: i,
+                        molecule_j: waters.len(),
+                        atom_i_xyz: Vec3::zero(),
+                        atom_j_xyz: Vec3::zero(),
+                        atom_k_xyz: Vec3::zero(),
+                        atom_l_xyz: Vec3::zero(),
+                    });
                 }
             }
         }
-        waters
+
+        (waters, data)
     }
 
     /// Build the next hydration shell.
@@ -183,18 +196,19 @@ impl WaterBox {
         let shell_id = self.number_of_shells();
         let molecules = self.molecules_in_shell(Some(&[shell_id]));
 
-        let mut waters = self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
+        let (mut waters, mut connections) =
+            self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
         // println!("!! waters: {}", waters.len());
 
         // Only the receptor contains disordered hydrogens
         let (w, df) = if shell_id == 0 {
             // TODO port: connections
-            self.wopt.sample_grid(&mut waters, &mut vec![], true)
+            self.wopt
+                .sample_grid(&mut waters, Some(&mut connections), true)
         } else {
             // After the first hydration layer, we don't care anymore about
             // connections. It was only useful for the disordered hydrogen atoms.
-            // TODO port: connections: note that here (opposed to if above) we actually don't want to pass any, should we make it an option
-            self.wopt.sample_grid(&mut waters, &mut vec![], true)
+            self.wopt.sample_grid(&mut waters, None, true)
         };
         waters = w;
 
@@ -266,7 +280,14 @@ impl WaterBox {
         let mut output_str = String::new();
 
         let shell_id = self.number_of_shells();
-        let water_shells = (1..=shell_id).map(|_| self.molecules_in_shell(Some(&vec![shell_id])));
+
+        // let water_shells = (1..=shell_id).map(|_| self.molecules_in_shell(Some(&vec![shell_id])));
+        let water_shells = (1..=shell_id)
+            .map(|_| self.molecules_in_shell(Some(&vec![shell_id])))
+            .collect::<Vec<Vec<MoleculeType>>>();
+
+        // let ws = water_shells.cloned().collect();
+        println!("water_shells: {:?}", water_shells.len());
 
         if include_receptor {
             let atoms = self.molecules[0].atoms();
@@ -291,7 +312,7 @@ impl WaterBox {
 
         let ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Equivalent to Python's string
 
-        for (water_shell, chain) in water_shells.zip(ascii_uppercase.chars().skip(1)) {
+        for (water_shell, chain) in water_shells.iter().zip(ascii_uppercase.chars().skip(1)) {
             j = 1;
 
             for water in water_shell {
