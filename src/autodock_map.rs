@@ -26,14 +26,66 @@ pub struct Map {
     pub map_files: Vec<String>,
     pub labels: Vec<String>,
     pub center: Vec3<f32>,
+    pub edges: (Vec<f32>, Vec<f32>, Vec<f32>),
 }
 
 #[derive(Debug, Clone)]
-pub struct Interpolator {}
+pub struct Interpolator {
+    affinity_map: Array3<f32>,
+}
 
 impl Interpolator {
+    // TODO port (support other methods) note: for now we assume method to be linear
     fn interpolate(&self, points: &[Vec3<f32>], method: &str) -> Vec<f32> {
-        todo!()
+        let mut results = Vec::with_capacity(points.len());
+
+        for point in points {
+            let x = point.x;
+            let y = point.y;
+            let z = point.z;
+
+            let (x_len, y_len, z_len) = self.affinity_map.dim();
+
+            // Get the integer coordinates of the cube surrounding (x, y, z)
+            let x0 = x.floor() as usize;
+            let x1 = (x0 + 1).min(x_len - 1);
+            let y0 = y.floor() as usize;
+            let y1 = (y0 + 1).min(y_len - 1);
+            let z0 = z.floor() as usize;
+            let z1 = (z0 + 1).min(z_len - 1);
+
+            // Retrieve values from the 8 corners of the cube
+            let c1 = self.affinity_map[[x0, y0, z0]];
+            let c2 = self.affinity_map[[x0, y0, z1]];
+            let c3 = self.affinity_map[[x0, y1, z0]];
+            let c4 = self.affinity_map[[x0, y1, z1]];
+            let c5 = self.affinity_map[[x1, y0, z0]];
+            let c6 = self.affinity_map[[x1, y0, z1]];
+            let c7 = self.affinity_map[[x1, y1, z0]];
+            let c8 = self.affinity_map[[x1, y1, z1]];
+
+            // Compute interpolation weights
+            let xw = x - x0 as f32;
+            let yw = y - y0 as f32;
+            let zw = z - z0 as f32;
+
+            // Perform trilinear interpolation
+            // this is chatgpt generated and not sure about it,
+            // will likely be replaced with a library so letting it be for now
+            let c00 = c1 * (1.0 - xw) + c5 * xw;
+            let c01 = c2 * (1.0 - xw) + c6 * xw;
+            let c10 = c3 * (1.0 - xw) + c7 * xw;
+            let c11 = c4 * (1.0 - xw) + c8 * xw;
+
+            let c0 = c00 * (1.0 - yw) + c10 * yw;
+            let c1 = c01 * (1.0 - yw) + c11 * yw;
+
+            let interpolated_value = c0 * (1.0 - zw) + c1 * zw;
+
+            results.push(interpolated_value);
+        }
+
+        results
     }
 }
 
@@ -106,6 +158,10 @@ impl Map {
             affinity_maps.insert(label, affinity_map);
         }
 
+        let edges_x = linspace(min.x, max.x, grid_information.nelements.x as usize);
+        let edges_y = linspace(min.y, max.y, grid_information.nelements.y as usize);
+        let edges_z = linspace(min.x, max.x, grid_information.nelements.z as usize);
+
         Ok(Map {
             kd_tree: KdTree::build_by_ordered_float(vec![]),
             // self._spacing = grid_information["spacing"]
@@ -120,9 +176,9 @@ impl Map {
             xmax: max.x,
             ymax: max.y,
             zmax: max.z,
-
             maps: affinity_maps,
             maps_interpn: maps_interpn,
+            edges: (edges_x, edges_y, edges_z),
         })
     }
 
@@ -327,9 +383,12 @@ impl Map {
 
     /// Return a interpolate function from the grid and the affinity map.
     /// This helps to interpolate the energy of coordinates off the grid.
-    pub fn generate_affinity_map_interpn(&self, affinity_map: &[Vec<f32>]) -> Interpolator {
+    // pub fn generate_affinity_map_interpn(&self, affinity_map: &[Vec<f32>]) -> Interpolator {
+    pub fn generate_affinity_map_interpn(&self, affinity_map: &Array3<f32>) -> Interpolator {
         // TODO regular grid interpolator
-        Interpolator {}
+        Interpolator {
+            affinity_map: affinity_map.clone(),
+        }
     }
 
     /// Read a fld file.
@@ -381,6 +440,15 @@ async fn read_affinity_map(path: &str) -> Result<Array3<f32>> {
 }
 
 fn generate_affinity_map_interpn(affinity_map: &Array3<f32>) -> Interpolator {
-    // TODO
-    Interpolator {}
+    Interpolator {
+        affinity_map: affinity_map.clone(),
+    }
+}
+
+fn linspace(start: f32, stop: f32, num: usize) -> Vec<f32> {
+    if num < 2 {
+        return vec![start];
+    }
+    let step = (stop - start) / (num as f32 - 1.0);
+    (0..num).map(|i| start + step * i as f32).collect()
 }
