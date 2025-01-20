@@ -169,7 +169,7 @@ impl WaterSampler {
 
                     // The last great energy filter
                     if utils::boltzmann_acceptance_rejection(
-                        &vec![energy_position],
+                        &energy_orientation,
                         &vec![self.energy_cutoff],
                         self.temperature,
                     )[0]
