@@ -167,18 +167,18 @@ impl WaterBox {
                             Some(bond.anchor_type.clone()),
                         );
                         waters.push(w);
-                    }
 
-                    data.push(Bond {
-                        atom_i: bond.atom_i,
-                        atom_j: None,
-                        molecule_i: i,
-                        molecule_j: waters.len(),
-                        atom_i_xyz: Vec3::zero(),
-                        atom_j_xyz: Vec3::zero(),
-                        atom_k_xyz: Vec3::zero(),
-                        atom_l_xyz: Vec3::zero(),
-                    });
+                        data.push(Bond {
+                            atom_i: bond.atom_i,
+                            atom_j: None,
+                            molecule_i: i,
+                            molecule_j: waters.len(),
+                            atom_i_xyz: Vec3::zero(),
+                            atom_j_xyz: Vec3::zero(),
+                            atom_k_xyz: Vec3::zero(),
+                            atom_l_xyz: Vec3::zero(),
+                        });
+                    }
                 }
             }
         }
