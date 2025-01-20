@@ -208,7 +208,7 @@ impl WaterBox {
         } else {
             // After the first hydration layer, we don't care anymore about
             // connections. It was only useful for the disordered hydrogen atoms.
-            self.wopt.sample_grid(&mut waters, None, true)
+            self.wopt.sample_grid(&mut waters, None, false)
         };
         waters = w;
 
