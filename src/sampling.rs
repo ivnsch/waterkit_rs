@@ -438,9 +438,7 @@ impl WaterSampler {
                         // before doing the optimization and only at the end
                         // we update the coordinates of the water molecules.
                         for rot_water in rot_waters.iter_mut() {
-                            // TODO port: what's up with indices here
-                            // p0 = rot_water.coordinates(1)[0]
-                            let p0 = rot_water.coordinates[1];
+                            let p0 = rot_water.coordinates(Some(&[1]))[0];
                             let p_new = utils::rotate_point(p0, p1, p2, rotation);
                             rot_water.update_coordinates(&p_new, 1);
                         }
