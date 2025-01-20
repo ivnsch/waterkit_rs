@@ -112,7 +112,7 @@ impl WaterSampler {
 
     pub fn sample_grid(
         &mut self,
-        mut waters: &[Water],
+        waters: &[Water],
         connections: Option<&mut [Bond]>,
         opt_disordered: bool,
     ) -> (Vec<Water>, BoxData) {
