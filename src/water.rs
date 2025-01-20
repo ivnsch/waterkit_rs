@@ -72,8 +72,8 @@ impl Water {
         self.molecule.update_coordinates(xyz, atom_id)
     }
 
-    pub fn atom_types(&self) -> Vec<String> {
-        self.molecule.atom_types()
+    pub fn atom_types(&self, atom_ids: Option<&[usize]>) -> Vec<String> {
+        self.molecule.atom_types(atom_ids)
     }
 
     pub fn translate(&mut self, vector: &Vec3<f32>) {

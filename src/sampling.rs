@@ -223,7 +223,9 @@ impl WaterSampler {
         from_edges: Option<f32>,
     ) -> (Vec<Vec3<f32>>, Vec<f32>) {
         // ) -> Vec<(Vec3<f32>, f32)> { // TODO port: review: this might be more intuitive
-        let oxygen_type = water.atom_types()[0].clone();
+        let oxygen_type = water.atom_types(Some(&vec![0]));
+        assert_eq!(1, oxygen_type.len());
+        let oxygen_type = oxygen_type.first().unwrap();
 
         // This is how we select the allowed positions:
         // 1. Get all the point coordinates on the grid around the anchor (sphere). If the anchor type
@@ -338,7 +340,9 @@ impl WaterSampler {
         add_noise: bool,
         from_edges: Option<f32>,
     ) -> f32 {
-        let oxygen_type = water.atom_types()[0].clone();
+        let oxygen_type = water.atom_types(Some(&vec![0]));
+        assert_eq!(1, oxygen_type.len());
+        let oxygen_type = oxygen_type.first().unwrap();
 
         let (coord_sphere, mut energy_sphere) = self.neighbors_points_grid(water, from_edges);
 

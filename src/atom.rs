@@ -108,9 +108,23 @@ impl Molecule {
     ///     atom_ids (int, list): index of one or multiple atoms
     /// Returns:
     ///     list: atom types
-    pub fn atom_types(&self) -> Vec<String> {
-        // TODO port: rest of code
-        self.atoms.iter().map(|a| a.t.clone()).collect()
+    pub fn atom_types(&self, atom_ids: Option<&[usize]>) -> Vec<String> {
+        if let Some(atom_ids) = atom_ids {
+            if self.atoms.len() > 1 {
+                // -1 because we use 0 based indices
+                let atom_ids_minus_1: Vec<usize> = atom_ids.iter().map(|a| a - 1).collect();
+                self.atoms
+                    .iter()
+                    .enumerate()
+                    .filter(|(index, _)| atom_ids_minus_1.contains(&index))
+                    .map(|(_, a)| a.t.clone())
+                    .collect()
+            } else {
+                self.atoms.iter().map(|a: &Atom| a.t.clone()).collect()
+            }
+        } else {
+            self.atoms.iter().map(|a: &Atom| a.t.clone()).collect()
+        }
     }
 
     /// Translate the water molecule.
