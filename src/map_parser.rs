@@ -21,13 +21,13 @@ pub async fn parse_map(path: &str) -> Result<ParsedMap> {
 }
 
 pub async fn parse_map_infos(path: &str) -> Result<GridInformation> {
-    println!("will open: {:?}", path);
+    // println!("will open: {:?}", path);
     parse_map_infos_internal(path).await.map(|r| r.1)
 }
 
 /// to be shared between case where we read only the infos and the whole file
 async fn parse_map_infos_internal(path: &str) -> Result<(BufReader<File>, GridInformation)> {
-    println!("will open: {:?}", path);
+    // println!("will open: {:?}", path);
     let file = File::open(path)?;
     let mut buf_reader = BufReader::new(file);
 
