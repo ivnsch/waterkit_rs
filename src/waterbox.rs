@@ -41,7 +41,7 @@ impl WaterBox {
         water_model: &str,
         spherical_water_map: Option<&str>,
     ) -> Result<WaterBox> {
-        let mut wopt = WaterSampler::new(
+        let wopt = WaterSampler::new(
             map.clone(),
             temperature,
             spherical_water_map,
@@ -60,7 +60,7 @@ impl WaterBox {
             kd_tree: KdTree::build_by_ordered_float(vec![]),
             water_model: water_model.to_string(),
             temperature: 0.,
-            wopt: wopt.clone(),
+            wopt,
             data: BoxData {
                 connections: vec![],
                 shells: vec![],
@@ -70,7 +70,7 @@ impl WaterBox {
 
         water_box.add_receptor(receptor);
 
-        wopt.set_water_box(water_box.clone());
+        water_box.wopt.set_water_box(water_box.clone());
 
         Ok(water_box)
     }
