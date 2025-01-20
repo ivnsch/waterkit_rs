@@ -35,52 +35,60 @@ pub struct Interpolator {
 }
 
 impl Interpolator {
-    // TODO port (support other methods) note: for now we assume method to be linear
+    // TODO this is chatgpt generated - only partly checked.
+    // likely will replace with library implementation anyway
+    // note also that we assume it to be only linear for now
     fn interpolate(&self, points: &[Vec3<f32>], method: &str) -> Vec<f32> {
         let mut results = Vec::with_capacity(points.len());
+        let (x_len, y_len, z_len) = self.affinity_map.dim();
 
         for point in points {
             let x = point.x;
             let y = point.y;
             let z = point.z;
 
-            let (x_len, y_len, z_len) = self.affinity_map.dim();
+            // Compute the integer coordinates of the cube surrounding (x, y, z)
+            let x0 = x.floor() as isize;
+            let y0 = y.floor() as isize;
+            let z0 = z.floor() as isize;
 
-            // Get the integer coordinates of the cube surrounding (x, y, z)
-            let x0 = x.floor() as usize;
-            let x1 = (x0 + 1).min(x_len - 1);
-            let y0 = y.floor() as usize;
-            let y1 = (y0 + 1).min(y_len - 1);
-            let z0 = z.floor() as usize;
-            let z1 = (z0 + 1).min(z_len - 1);
+            let x1 = (x0 + 1).min(x_len as isize - 1);
+            let y1 = (y0 + 1).min(y_len as isize - 1);
+            let z1 = (z0 + 1).min(z_len as isize - 1);
+
+            // Extrapolation: Clamp values within the grid boundaries
+            let x0 = x0.clamp(0, x_len as isize - 1) as usize;
+            let y0 = y0.clamp(0, y_len as isize - 1) as usize;
+            let z0 = z0.clamp(0, z_len as isize - 1) as usize;
+            let x1 = x1.clamp(0, x_len as isize - 1) as usize;
+            let y1 = y1.clamp(0, y_len as isize - 1) as usize;
+            let z1 = z1.clamp(0, z_len as isize - 1) as usize;
 
             // Retrieve values from the 8 corners of the cube
-            let c1 = self.affinity_map[[x0, y0, z0]];
-            let c2 = self.affinity_map[[x0, y0, z1]];
-            let c3 = self.affinity_map[[x0, y1, z0]];
-            let c4 = self.affinity_map[[x0, y1, z1]];
-            let c5 = self.affinity_map[[x1, y0, z0]];
-            let c6 = self.affinity_map[[x1, y0, z1]];
-            let c7 = self.affinity_map[[x1, y1, z0]];
-            let c8 = self.affinity_map[[x1, y1, z1]];
+            let c000 = self.affinity_map[[x0, y0, z0]];
+            let c001 = self.affinity_map[[x0, y0, z1]];
+            let c010 = self.affinity_map[[x0, y1, z0]];
+            let c011 = self.affinity_map[[x0, y1, z1]];
+            let c100 = self.affinity_map[[x1, y0, z0]];
+            let c101 = self.affinity_map[[x1, y0, z1]];
+            let c110 = self.affinity_map[[x1, y1, z0]];
+            let c111 = self.affinity_map[[x1, y1, z1]];
 
             // Compute interpolation weights
-            let xw = x - x0 as f32;
-            let yw = y - y0 as f32;
-            let zw = z - z0 as f32;
+            let xd = (x - x0 as f32).clamp(0.0, 1.0);
+            let yd = (y - y0 as f32).clamp(0.0, 1.0);
+            let zd = (z - z0 as f32).clamp(0.0, 1.0);
 
             // Perform trilinear interpolation
-            // this is chatgpt generated and not sure about it,
-            // will likely be replaced with a library so letting it be for now
-            let c00 = c1 * (1.0 - xw) + c5 * xw;
-            let c01 = c2 * (1.0 - xw) + c6 * xw;
-            let c10 = c3 * (1.0 - xw) + c7 * xw;
-            let c11 = c4 * (1.0 - xw) + c8 * xw;
+            let c00 = c000 * (1.0 - xd) + c100 * xd;
+            let c01 = c001 * (1.0 - xd) + c101 * xd;
+            let c10 = c010 * (1.0 - xd) + c110 * xd;
+            let c11 = c011 * (1.0 - xd) + c111 * xd;
 
-            let c0 = c00 * (1.0 - yw) + c10 * yw;
-            let c1 = c01 * (1.0 - yw) + c11 * yw;
+            let c0 = c00 * (1.0 - yd) + c10 * yd;
+            let c1 = c01 * (1.0 - yd) + c11 * yd;
 
-            let interpolated_value = c0 * (1.0 - zw) + c1 * zw;
+            let interpolated_value = c0 * (1.0 - zd) + c1 * zd;
 
             results.push(interpolated_value);
         }
