@@ -170,8 +170,17 @@ impl Map {
         let edges_y = linspace(min.y, max.y, grid_information.nelements.y as usize);
         let edges_z = linspace(min.x, max.x, grid_information.nelements.z as usize);
 
+        let mut meshgrid: Vec<[f32; 3]> = Vec::new();
+        for &x in &edges_x {
+            for &y in &edges_y {
+                for &z in &edges_z {
+                    meshgrid.push([x, y, z]);
+                }
+            }
+        }
+
         Ok(Map {
-            kd_tree: KdTree::build_by_ordered_float(vec![]),
+            kd_tree: KdTree::build_by_ordered_float(meshgrid),
             // self._spacing = grid_information["spacing"]
             spacing: grid_information.spacing,
             npts: grid_information.nelements,
