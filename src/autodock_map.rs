@@ -467,5 +467,5 @@ fn linspace(start: f32, stop: f32, num: usize) -> Vec<f32> {
         return vec![start];
     }
     let step = (stop - start) / (num as f32 - 1.0);
-    (0..num).map(|i| start + step * i as f32).collect()
+    (0..=num).map(|i| start + step * i as f32).collect()
 }
