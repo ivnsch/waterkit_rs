@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::Result;
 use pdbtbx::PDB;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use vek::Vec3;
 
 // TODO async + pyfunction: "experimental feature"
@@ -25,19 +26,16 @@ pub async fn hydrate_rust(
         output_dir, n_frames, n_layer
     );
 
-    // TODO port: spherical_water_map
-
-    // println!("receptor: {:?}", receptor);
-    let mut water_box_res =
+    let water_box_res =
         WaterBox::new(receptor, water_molecule, map, temperature, "tip3p", None).await;
 
     println!("will iterate over {} frames", n_frames);
     match water_box_res {
-        Ok(mut water_box) => {
-            // for now single threaded
-            for i in 0..n_frames {
+        Ok(water_box) => {
+            (0..n_frames).into_par_iter().for_each(|i| {
+                let mut water_box = water_box.clone();
                 hydrate_single(&mut water_box, n_layer, i, output_dir);
-            }
+            });
         }
         Err(e) => {
             println!("Error initializing water box: {:?}", e)
