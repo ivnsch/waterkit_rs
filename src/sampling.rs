@@ -6,7 +6,6 @@ use vek::Vec3;
 use crate::{
     atom::{Bond, Molecule, MoleculeType},
     autodock_map::Map,
-    run_waterkit::to_molecule,
     utils,
     water::Water,
     waterbox::{BoxData, Shell, WaterBox},
@@ -116,6 +115,7 @@ impl WaterSampler {
         connections: Option<&mut [Bond]>,
         opt_disordered: bool,
     ) -> (Vec<Water>, BoxData) {
+        let mut waters = waters.to_vec();
         // Optimize position of water molecules.
         let mut unfavorable_water_indices: Vec<usize> = vec![];
 
@@ -135,7 +135,7 @@ impl WaterSampler {
             // TODO port: connections dataframe etc
             if let Some(connections) = &connections {
                 if opt_disordered {
-                    self.optimize_disordered_waters(waters, connections);
+                    self.optimize_disordered_waters(&waters, connections);
                 }
             }
 
@@ -143,7 +143,7 @@ impl WaterSampler {
             // But if it returns [], it means the most favorable spots for placing water molecules
             // are definitively not that favorable, likely they are all outside the box.
 
-            let water_orders = self.optimize_placement_order_grid(waters, Some(1.));
+            let water_orders = self.optimize_placement_order_grid(&waters, Some(1.));
 
             // And now we sample the position of all the water individually. The
             // acceptance of the new position/orientation is based on the metropolis
@@ -190,14 +190,11 @@ impl WaterSampler {
                 };
             }
             // Keep only the good waters
-            // waters = [waters[i] for i in water_orders if not i in unfavorable_water_indices]
-            // TODO port: compact
-            let mut waters: Vec<Water> = vec![];
-            for i in &water_orders {
-                if !unfavorable_water_indices.contains(i) {
-                    waters.push(waters[*i].clone());
-                }
-            }
+            waters = water_orders
+                .iter()
+                .filter(|&i| !unfavorable_water_indices.contains(i))
+                .map(|&i| waters[i].clone())
+                .collect();
 
             // Keep connections of the good waters
             if let Some(connections) = connections {
@@ -215,7 +212,7 @@ impl WaterSampler {
             df.shells = shells;
         }
 
-        (waters.to_vec(), df)
+        (waters, df)
     }
 
     fn neighbor_points_grid(
@@ -249,21 +246,16 @@ impl WaterSampler {
 
         if let Some(from_edges) = from_edges {
             let is_close = self.ad_map.is_close_to_edge(&coord_sphere, from_edges);
-            // TODO port: what is this?
-            // coord_sphere = coord_sphere[~is_close];
+            coord_sphere = coord_sphere
+                .into_iter()
+                .zip(is_close.into_iter())
+                .filter_map(|(coord, close)| if !close { Some(coord) } else { None })
+                .collect();
         }
 
         // It is mandatory to normalize the hb_vector, otherwise you don't get the angle right
-        // TODO port: crate to add vectors
-        // let hb_vector =
-        //     water.hb_anchor + utils::normalize(&utils::vector(&water.hb_vector, &water.hb_anchor));
-        let hb_vector = Vec3 {
-            x: 0.,
-            y: 0.,
-            z: 0.,
-        };
+        let hb_vector = water.hb_anchor + (water.hb_vector + water.hb_anchor).normalized();
 
-        // TODO port: double check
         coord_sphere = coord_sphere
             .into_iter()
             .filter(|coord| {
@@ -277,11 +269,6 @@ impl WaterSampler {
             .energy_coordinates(&coord_sphere, &oxygen_type, "linear");
 
         (coord_sphere, energy_sphere)
-        // // TODO port: double check
-        // coord_sphere
-        //     .into_iter()
-        //     .zip(energy_sphere.into_iter())
-        //     .collect()
     }
 
     fn optimize_placement_order_grid(
@@ -306,27 +293,30 @@ impl WaterSampler {
                     .reduce(|a, b| if a < b { a } else { b })
                 {
                     energies.push(min_value)
-                } else {
-                    energies.push(f32::INFINITY);
                 }
+            } else {
+                energies.push(f32::INFINITY)
             }
         }
 
         // Pick order based on Boltzmann choices
-        let mut order = utils::boltzmann_choices(&energies, self.temperature, Some(energies.len()));
+        let order: Vec<usize> =
+            utils::boltzmann_choices(&energies, self.temperature, Some(energies.len()));
+
+        let new_energies = order.iter().map(|&i| energies[i]).collect::<Vec<f32>>();
 
         if !order.is_empty() {
             let decisions = utils::boltzmann_acceptance_rejection(
-                // TODO port
-                // energies[order],
-                &energies,
+                &new_energies,
                 &vec![self.energy_cutoff],
                 self.temperature,
             );
-            // TODO port
-            // order = order[decisions]
 
-            return order;
+            return order
+                .iter()
+                .zip(decisions.iter()) // Pair each index with its corresponding boolean
+                .filter_map(|(&idx, &keep)| if keep { Some(idx) } else { None }) // Keep only where `decisions` is true
+                .collect();
         } else {
             return vec![];
         }
@@ -704,7 +694,7 @@ fn convert_array2_to_vec3(array: Array2<f32>) -> Vec<Vec3<i32>> {
 }
 
 // TODO port: review
-fn meshgrid(x: &[f32], y: &[f32], z: &[f32]) -> (Array3<f32>, Array3<f32>, Array3<f32>) {
+pub fn meshgrid(x: &[f32], y: &[f32], z: &[f32]) -> (Array3<f32>, Array3<f32>, Array3<f32>) {
     let nx = x.len();
     let ny = y.len();
     let nz = z.len();
