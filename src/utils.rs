@@ -103,13 +103,18 @@ pub fn boltzmann_choices(energies: &[f32], temperature: f32, size: Option<usize>
     let energies = energies
         .to_vec()
         .into_iter()
-        .map(|e| e / 200.)
+        .map(|e| e / 400.)
         .collect::<Vec<f32>>();
 
-    println!("energies: {:?} temperature: {:?}", energies, temperature);
-    let p = boltzmann_probabilities(&energies, temperature);
-    println!("p: {:?}", p);
+    // println!("energies: {:?} temperature: {:?}", energies, temperature);
+    let mut p = boltzmann_probabilities(&energies, temperature);
+    // println!("p: {:?}", p);
 
+    // TODO port HACK adding random numbers so it doesn't crash later accessing empty array
+    if p.iter().sum::<f32>() == 0. {
+        let mut rng = rand::thread_rng();
+        p = p.iter().map(|_| rng.gen()).collect();
+    }
     if p.iter().sum::<f32>() == 0. {
         vec![]
     } else {
