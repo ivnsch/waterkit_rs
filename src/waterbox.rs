@@ -195,10 +195,21 @@ impl WaterBox {
 
         let shell_id = self.number_of_shells();
         let molecules = self.molecules_in_shell(Some(&[shell_id]));
+        // println!(
+        //     "in build next shell, shell_id: {}, molecules: {}",
+        //     shell_id,
+        //     molecules.len()
+        // );
 
         let (mut waters, mut connections) =
             self.place_optimal_spherical_waters(&molecules, sw_type, partial_charge);
         // println!("!! waters: {}", waters.len());
+
+        // println!(
+        //     "waters: {}, connections: {}",
+        //     waters.len(),
+        //     connections.len()
+        // );
 
         // Only the receptor contains disordered hydrogens
         let (w, df) = if shell_id == 0 {
@@ -212,6 +223,7 @@ impl WaterBox {
         };
         waters = w;
 
+        // println!("waters(2): {}", waters.len(),);
         if !waters.is_empty() {
             // TODO port: wrap in enum: performance?
             let molecules = waters
@@ -281,13 +293,14 @@ impl WaterBox {
 
         let shell_id = self.number_of_shells();
 
-        // let water_shells = (1..=shell_id).map(|_| self.molecules_in_shell(Some(&vec![shell_id])));
-        let water_shells = (1..=shell_id)
+        // TODO port: HACK! starting at 0 instead of 1 because otherwise nothing is printed
+        // let water_shells = (1..=shell_id)
+        let water_shells = (0..=shell_id)
             .map(|_| self.molecules_in_shell(Some(&vec![shell_id])))
             .collect::<Vec<Vec<MoleculeType>>>();
 
         // let ws = water_shells.cloned().collect();
-        println!("water_shells: {:?}", water_shells.len());
+        // println!("water_shells: {:?}", water_shells.len());
 
         if include_receptor {
             let atoms = self.molecules[0].atoms();
