@@ -31,6 +31,10 @@ conda activate waterkit
 ```
 import waterkit_rs
 
+receptor_atoms_tuples = [tuple(atom) for atom in receptor.atoms]
+receptor_hydrogen_bond_tuples = list(receptor.hydrogen_bonds.itertuples(index=False, name=None))
+receptor_rotatable_bond_tuples = list(receptor.rotatable_bonds.itertuples(index=False, name=None))
+
 receptor_for_rust = {
     "atoms": receptor_atoms_tuples,
     "hydrogen_bonds": receptor_hydrogen_bond_tuples,
