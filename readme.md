@@ -1,10 +1,32 @@
-run_waterkit (standalone rust test: hardcoded parameters in JSON/test)
+#### Rust test (standalone)
+
+The parameters are hardcoded in JSON / the test. This is just during development, to not have start from Python.
 
 ```
 cargo test --release -- --nocapture
 ```
 
-Python:
+#### Build Rust to be used by python
+
+Install [maturin](https://github.com/PyO3/maturin?tab=readme-ov-file#usage)
+
+Activate the waterkit environment, e.g:
+
+```
+conda activate waterkit
+```
+
+Then run:
+
+```
+maturin develop
+```
+
+#### Run Rust from python
+
+```
+conda activate waterkit
+```
 
 ```
 import waterkit_rs
