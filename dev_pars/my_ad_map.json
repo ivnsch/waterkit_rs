@@ -1,0 +1,23 @@
+{
+  "box_center": [
+    12.3,
+    54.49,
+    22.13
+  ],
+  "box_size": [
+    15,
+    15,
+    15
+  ],
+  "box_spacing": 0.375,
+  "labels": [
+    "OW",
+    "SW",
+    "HW"
+  ],
+  "files": [
+    "./receptor.OW.map",
+    "./receptor.e.map",
+    "./receptor.d.map"
+  ]
+}
