@@ -292,7 +292,7 @@ mod tests {
         let ad_map_python = ad_map_res.unwrap();
         let ad_map = to_map(ad_map_python).await.unwrap();
 
-        let res = hydrate_rust(receptor, water, ad_map, "traj", 10000, 123, 20.).await;
+        let res = hydrate_rust(receptor, water, ad_map, "traj", 10000, 3, 20.).await;
         println!("res: {:?}", res);
     }
 }
