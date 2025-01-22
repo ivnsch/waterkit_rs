@@ -1,12 +1,14 @@
-run_waterkit (hardcoded parameters in JSON/test)
+run_waterkit (standalone rust test: hardcoded parameters in JSON/test)
 
 ```
 cargo test --release -- --nocapture
 ```
 
-Python example (this doesn't yet start run_waterkit)
+Python:
 
 ```
+import waterkit_rs
+
 receptor_for_rust = {
     "atoms": receptor_atoms_tuples,
     "hydrogen_bonds": receptor_hydrogen_bond_tuples,
@@ -25,5 +27,7 @@ ad_map_for_rust = {
     "files": ad_map._files,
 }
 
-string_sum.save_parameters(receptor_for_rust, water_for_rust, ad_map_for_rust)
+print(str(await waterkit_rs.run(receptor_for_rust, water_for_rust, ad_map_for_rust)))
 ```
+
+Currently requires waterkit/data directory to be directly under root, and files receptor_maps.fld, receptor.d.map, receptor.e.map and receptor.OW.map to be under root as well.
