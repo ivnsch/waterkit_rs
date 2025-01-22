@@ -154,7 +154,6 @@ impl WaterSampler {
                 let energy_position = self.optimize_position_grid(&mut water, add_noise, Some(1.));
 
                 // The first great filter
-                // TODO port: first argument incorrect
                 if utils::boltzmann_acceptance_rejection(
                     &vec![energy_position],
                     &vec![self.energy_cutoff],
@@ -174,7 +173,6 @@ impl WaterSampler {
                         self.temperature,
                     )[0]
                     {
-                        // TODO port: data
                         shells.push(Shell {
                             shell_id: shell_id + 1,
                             energy_position: Some(energy_position),
@@ -282,7 +280,6 @@ impl WaterSampler {
             let (_, mut energy_sphere) = self.neighbor_points_grid(water, from_edges);
 
             if !energy_sphere.is_empty() {
-                // TODO port: what's the goal of this? maybe another way than using inf?
                 for es in energy_sphere.iter_mut() {
                     if *es == 0. {
                         *es = f32::INFINITY;
