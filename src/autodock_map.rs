@@ -217,9 +217,7 @@ impl Map {
 
         let all_in = x_in && y_in && z_in;
 
-        // TODO port: HACK! returns always
-        true
-        // all_in
+        all_in
     }
 
     /// Get energy interaction of a molecule based of the grid.
