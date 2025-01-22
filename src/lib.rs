@@ -15,6 +15,7 @@ use anyhow::Result;
 use atom::{Atom, Bond, Molecule};
 use autodock_map::Map;
 use hydrogen_bonds::HydrogenBond;
+use run_waterkit::hydrate_rust;
 use serde::{Deserialize, Serialize};
 use vek::Vec3;
 
@@ -77,6 +78,21 @@ fn save_parameters(
         println!("e with ad map: {:?}", e);
     }
 
+    Ok(())
+}
+
+///
+///
+#[pyfunction]
+async fn run(
+    receptor_python: PythonMolecule,
+    water_python: PythonMolecule,
+    ad_map_python: PythonAdMap,
+) -> PyResult<()> {
+    let receptor = to_molecule(receptor_python);
+    let water = to_molecule(water_python);
+    let ad_map = to_map(ad_map_python).await.unwrap();
+    let res = hydrate_rust(receptor, water, ad_map, "traj", 10000, 3, 20.).await;
     Ok(())
 }
 
@@ -165,6 +181,7 @@ fn waterkit_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(process_rotatable_bonds, m)?)?;
     m.add_function(wrap_pyfunction!(save_parameters, m)?)?;
     m.add_function(wrap_pyfunction!(process_ad_map, m)?)?;
+    m.add_function(wrap_pyfunction!(run, m)?)?;
     Ok(())
 }
 
