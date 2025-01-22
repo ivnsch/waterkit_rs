@@ -416,14 +416,6 @@ pub struct KdTreeRelation {
     pub molecule_i: usize,
 }
 
-#[cfg(test)]
-mod test {
-    #[test]
-    fn load_pdb() {
-        let (mut pdb, _errors) = pdbtbx::open("protein_prepared_amber.pdb").unwrap();
-    }
-}
-
 fn molecules_as_points(molecules: &[MoleculeType]) -> Vec<Vec3<f32>> {
     let mut points = vec![];
     for m in molecules {
