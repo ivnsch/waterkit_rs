@@ -1,7 +1,6 @@
 use crate::{
     atom::{self, Molecule},
     autodock_map::Map,
-    fld_parser::parse_fld,
     waterbox::WaterBox,
     waterkit::hydrate_single,
 };
