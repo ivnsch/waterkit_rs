@@ -326,7 +326,7 @@ impl Map {
     /// Returns:
     ///     ndarray: 2d Numpy array of coordinates
     pub fn neighbor_points(&self, xyz: &Vec3<f32>, radius: f32, min_radius: f32) -> Vec<Vec3<f32>> {
-        // TODO port: had to increase radius because otherwise never finds any points
+        // TODO port: HACK! had to increase radius because otherwise never finds any points
         // data etc. seems to be same as python so don't know what's issue? need to investigate more
         let radius = radius * 3.;
         let arr = self.kd_tree.within_radius(&xyz.into_array(), radius);
