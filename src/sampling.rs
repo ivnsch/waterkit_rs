@@ -23,7 +23,6 @@ pub struct WaterSampler {
     pub energy_cutoff: f32,
     pub water_model: String,
     pub angle: f32,
-    // TODO port: consider using ndarray or polars
     pub water_orientations: Vec<Vec<f32>>,
     pub water_ref: Molecule,
     pub water_map: Map,
@@ -127,12 +126,10 @@ impl WaterSampler {
 
         let mut shells = vec![];
 
-        // TODO port: review: need to put in option to avoid circular reference
         if let Some(water_box) = &self.water_box {
             let shell_id = water_box.number_of_shells();
             let add_noise = true;
 
-            // TODO port: connections dataframe etc
             if let Some(connections) = &connections {
                 if opt_disordered {
                     self.optimize_disordered_waters(&waters, connections);
