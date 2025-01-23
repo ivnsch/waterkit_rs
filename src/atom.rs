@@ -94,9 +94,8 @@ impl Molecule {
         if atom_id <= self.atoms.len() {
             if self.atoms.len() > 1 {
                 self.atoms[atom_id - 1].coords = *xyz;
-            } else {
-                // TODO port: this doesn't look good, what is it for?
-                // self.atoms["xyz"] = xyz
+            } else if let Some(atom) = self.atoms.first_mut() {
+                atom.coords = *xyz;
             }
             return true;
         }
