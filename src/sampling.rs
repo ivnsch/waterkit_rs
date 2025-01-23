@@ -564,10 +564,9 @@ impl WaterSampler {
         let water_xyz = &water.coordinates;
 
         // The center is the closest grid point from the water molecule
-        // TODO port: review &water.coordinates[0], should not assume 1 element
         let center_xyz =
             self.ad_map
-                .neighbor_points(&water.coordinates[0], self.ad_map.spacing, 0.);
+                .neighbor_points(&water.coordinates(Some(&[1]))[0], self.ad_map.spacing, 0.);
         // TODO port: added a [0] here just to make it compile, most likely more adjustments needed
         let center_index = self.ad_map.cartesian_to_index(&center_xyz[0]);
         let center_index_ft = center_index.map(|i| i as f32);
