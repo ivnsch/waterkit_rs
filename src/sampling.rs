@@ -384,9 +384,6 @@ impl WaterSampler {
 
                 if !rot_waters.is_empty() {
                     // Get energy of the favorable disordered waters
-                    // TODO port: pass additional parameters
-                    // energy_waters = np.array([ad_map.energy(w.atom_informations(), ignore_electrostatic=True, ignore_desolvation=True) for w in rot_waters])
-                    // TODO port other parameters for energy()
                     let energy_waters_nested = rot_waters
                         .iter()
                         .map(|w| {
@@ -464,8 +461,6 @@ impl WaterSampler {
                         ((360. - current_angle.to_degrees()) + angles[i].to_degrees()).to_radians();
                     // Update coordinates to the choosen state
                     for rot_water in rot_waters.iter_mut() {
-                        // TODO port: what's up with indices here
-                        // p0 = rot_water.coordinates(1)[0]
                         let p0 = rot_water.coordinates(Some(&[1]))[0];
                         let p_new = utils::rotate_point(p0, p1, p2, best_angle);
                         rot_water.update_coordinates(&p_new, 1);
