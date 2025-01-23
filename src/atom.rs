@@ -135,9 +135,8 @@ impl Molecule {
         let water_xyz: Vec<Vec3<f32>> = self.coordinates(None).iter().map(|c| c + vector).collect();
 
         for (atom_id, coord) in water_xyz.iter().enumerate() {
-            // TODO port: omitting + 1, review
             // +1, because atom ids are 1-based
-            self.update_coordinates(coord, atom_id);
+            self.update_coordinates(coord, atom_id + 1);
         }
         // We have also to translate the hydrogen bond vectors if present
         if let Some(hydrogen_bonds) = self.hydrogen_bonds.as_mut() {
