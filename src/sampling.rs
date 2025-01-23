@@ -486,7 +486,7 @@ impl WaterSampler {
         // water_info = water.atom_informations()
         // energies = np.zeros(self._water_orientations.shape[0])
         let num_orientations = self.water_orientations.len();
-        let energies: Vec<f32> = vec![0.0; num_orientations];
+        let mut energies: Vec<f32> = vec![0.0; num_orientations];
 
         // Translate the coordinates
         // let water_orientations = self.water_orientations + oxygen_xyz;
@@ -507,15 +507,18 @@ impl WaterSampler {
         // Get the energies for each atom
         // Oxygen first
         // energies += ad_map.energy_coordinates(oxygen_xyz, water_info["t"][0])
-        // TODO port: we shouldn't assume a first element
         let atom_type = &water_info[0].t;
         self.ad_map
             .energy_coordinates(oxygen_xyz, &atom_type, "linear");
         //... and then hydrogens/lone-pairs
         for (i, atom) in water_info.iter().skip(1).enumerate() {
+            // TODO port (use i)
             // energies += ad_map.energy_coordinates(water_orientations[:,i], atom_type)
-            self.ad_map
-                .energy_coordinates(&water_orientations, &atom.t, "linear");
+            let orientations = water_orientations.clone();
+            let coords = self
+                .ad_map
+                .energy_coordinates(&orientations, &atom.t, "linear");
+            energies = energies.iter().zip(coords).map(|(e, c)| e + c).collect()
         }
 
         // Pick orientation based on Boltzmann choices
