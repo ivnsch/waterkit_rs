@@ -103,7 +103,6 @@ pub enum EnergyRes {
     Energies(Vec<Vec<f32>>),
 }
 
-// TODO port: performance of clone.. also is this flattening here even correct
 impl EnergyRes {
     pub fn flatten(&self) -> Vec<f32> {
         match self {
@@ -229,7 +228,6 @@ impl Map {
     ///     method (str): Interpolate method (default: linear)
     /// Returns:
     ///     float: Grid energy interaction
-    /// TODO port it seems it can return an array or value: use an enum
     pub fn energy(
         &self,
         atoms: &[Atom],

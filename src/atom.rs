@@ -177,7 +177,6 @@ pub struct Bond {
 }
 
 impl Bond {
-    // TODO port: better name for this
     pub fn dihedral_pars(&self) -> DihedralPars {
         DihedralPars {
             atom_i_xyz: self.atom_i_xyz,
@@ -188,7 +187,6 @@ impl Bond {
     }
 }
 
-// TODO port: better name for this
 pub struct DihedralPars {
     pub atom_i_xyz: Vec3<f32>,
     pub atom_j_xyz: Vec3<f32>,
