@@ -345,7 +345,6 @@ impl Map {
     ///     distance (float): distance
     /// Returns:
     ///     ndarray: 1d Numpy array of boolean
-    /// TODO port: not entirely sure xzy is array of arrays, need to review
     pub fn is_close_to_edge(&self, xyz: &[Vec3<f32>], distance: f32) -> Vec<bool> {
         xyz.into_iter()
             .map(|xyz| self.is_close_to_edge_point(xyz, distance))
