@@ -490,15 +490,15 @@ impl WaterSampler {
 
         // Translate the coordinates
         // let water_orientations = self.water_orientations + oxygen_xyz;
-        // TODO port: double check, for sure this is verbose
+        // TODO port double check, ndarray? for sure this is verbose
         let water_orientations: Vec<Vec3<f32>> = self
             .water_orientations
             .iter()
             .zip(oxygen_xyz.iter())
-            .map(|(orientation, offset)| {
+            .map(|(orientation, oxygen)| {
                 orientation
                     .iter()
-                    .zip([offset.x as f32, offset.y as f32, offset.z as f32].iter())
+                    .zip([oxygen.x as f32, oxygen.y as f32, oxygen.z as f32].iter())
                     .map(|(value, offset_value)| value + offset_value)
                     .collect()
             })
