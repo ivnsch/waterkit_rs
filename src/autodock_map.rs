@@ -381,11 +381,7 @@ impl Map {
         let idx: Vec3<i32> = ((xyz - Vec3::from(mins)) / self.spacing).map(|v| v.round() as i32);
 
         // All the index values outside the grid are clipped (limited) to the nearest index
-        // TODO port: double check this is right
-        // np.clip(idx, [0, 0, 0], self._npts, idx)
-        let idx = idx.map2(self.npts, |value, max| value.clamp(0, max as i32));
-
-        idx
+        idx.map2(self.npts, |i, n| i.clamp(0, n as i32))
     }
 
     /// Return the cartesian grid coordinates associated to the grid index
