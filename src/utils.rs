@@ -141,7 +141,6 @@ pub fn vector(a: &Vec3<f32>, b: &Vec3<f32>) -> Vec3<f32> {
 }
 
 /// Returm angle between a (can be multiple coordinates), b and c
-/// TODO port type of a is most likely wrong, review
 pub fn get_angle(a: &Vec3<f32>, b: &Vec3<f32>, c: &Vec3<f32>, degree: bool) -> f32 {
     let ba = vector(b, a);
     let bc = vector(b, c);

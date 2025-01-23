@@ -141,7 +141,6 @@ impl WaterBox {
     /// Returns:
     ///     list: list of water molecules
     ///     DataFrame: contains connections between molecules
-    /// TODO port: return connections
     fn place_optimal_spherical_waters(
         &self,
         molecules: &[MoleculeType],
@@ -213,7 +212,6 @@ impl WaterBox {
 
         // Only the receptor contains disordered hydrogens
         let (w, df) = if shell_id == 0 {
-            // TODO port: connections
             self.wopt
                 .sample_grid(&mut waters, Some(&mut connections), true)
         } else {
@@ -268,7 +266,7 @@ impl WaterBox {
     // TODO port: this is bit misleading name/functionality in original implementation
     // if we have e.g. shell 0, it returns 0, but number of shells is not 0
     pub fn number_of_shells(&self) -> usize {
-        // TODO port: return Option - not ok to default to 0
+        // TODO port: review returning 0 as max() if None, is this behavior of the python impl?
         self.data
             .shells
             .iter()

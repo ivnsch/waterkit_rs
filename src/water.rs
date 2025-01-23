@@ -44,7 +44,6 @@ impl Water {
             hb_anchor,
             hb_vector,
             hb_type: hb_type.clone(),
-            // TODO port: inheritance: trait? this composition not looking good
             coordinates: vec![*xyz],
             molecule: Molecule {
                 atoms: vec![create_atom(0, xyz, atom_type, partial_charge)],
