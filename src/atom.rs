@@ -154,8 +154,8 @@ impl Molecule {
     //     ndarray: atom information (i, xyz, q, t)
     pub fn atom_informations(&self, atom_ids: Option<Vec<usize>>) -> Vec<Atom> {
         if let Some(atom_ids) = atom_ids {
-            // TODO port: omitting - 1, review
             // # -1 because numpy array is 0-based
+            let atom_ids = atom_ids.iter().map(|a| a - 1).collect::<Vec<usize>>();
             atom_ids.iter().map(|&i| self.atoms[i].clone()).collect()
         } else {
             self.atoms.clone()
