@@ -353,9 +353,7 @@ impl WaterSampler {
 
                 // Update the coordinates
                 water.translate(&utils::vector(&water.coordinates[1], &new_coord));
-                // TODO port: return correct thing?:
-                // return energy_sphere[idx[0]];
-                return energy_sphere[0];
+                return energy_sphere[idx[0]];
             }
         }
 
