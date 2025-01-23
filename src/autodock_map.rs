@@ -252,9 +252,6 @@ impl Map {
 
         for atom_type in atom_types {
             let xyz = if atoms.len() > 1 {
-                // TODO port: confirm this is same as
-                // index = np.where(nd["t"] == atom_type)[0]
-                // xyz = nd[index]["xyz"]
                 Some(
                     atoms
                         .into_iter()
