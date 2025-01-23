@@ -512,9 +512,7 @@ impl WaterSampler {
         self.ad_map
             .energy_coordinates(oxygen_xyz, &atom_type, "linear");
         //... and then hydrogens/lone-pairs
-        // for i, atom_type in enumerate(water_info["t"][1:]):
-        for (i, atom) in water_info.iter().enumerate() {
-            // TODO port: first parameter is most likely incorrect (not using i) but it's what compiles currently
+        for (i, atom) in water_info.iter().skip(1).enumerate() {
             // energies += ad_map.energy_coordinates(water_orientations[:,i], atom_type)
             self.ad_map
                 .energy_coordinates(&water_orientations, &atom.t, "linear");
