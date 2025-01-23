@@ -1,13 +1,6 @@
-use crate::{
-    atom::{self, Molecule},
-    autodock_map::Map,
-    waterbox::WaterBox,
-    waterkit::hydrate_single,
-};
+use crate::{atom::Molecule, autodock_map::Map, waterbox::WaterBox, waterkit::hydrate_single};
 use anyhow::Result;
-use pdbtbx::PDB;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use vek::Vec3;
 
 // TODO async + pyfunction: "experimental feature"
 // #[pyfunction]
@@ -42,32 +35,4 @@ pub async fn hydrate_rust(
     }
 
     Ok(())
-}
-
-pub fn to_molecule(pdbqt: PDB) -> Molecule {
-    let mol_atoms = pdbqt
-        .atoms()
-        .map(|a| atom::Atom {
-            index: a.serial_number(),
-            name: a.name().to_string(),
-            // TODO port what field is this?
-            resname: "".to_string(),
-            // TODO port what field is this?
-            resnum: 0,
-            coords: Vec3::new(a.x() as f32, a.y() as f32, a.z() as f32),
-            q: a.charge(),
-            t: a.autodock_type(),
-        })
-        .collect();
-    Molecule {
-        atoms: mol_atoms,
-        hydrogen_bonds: None,
-        rotatable_bonds: vec![],
-        // TODO port
-        hb_anchor: Vec3::zero(),
-        // TODO port
-        hb_vector: Vec3::zero(),
-        // TODO port
-        hb_type: "".to_string(),
-    }
 }
