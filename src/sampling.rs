@@ -1,6 +1,7 @@
 use anyhow::Result;
 use nalgebra::{UnitQuaternion, Vector3};
 use ndarray::{Array2, Array3, Axis};
+use rand::Rng;
 use vek::Vec3;
 
 use crate::{
@@ -341,8 +342,13 @@ impl WaterSampler {
 
                 if add_noise {
                     let limit = self.ad_map.spacing / 2.;
-                    // TODO
-                    // new_coord += np.random.uniform(-limit, limit, new_coord.shape[0])
+                    let mut rng = rand::thread_rng();
+                    let noise = Vec3::new(
+                        rng.gen_range(-limit..=limit),
+                        rng.gen_range(-limit..=limit),
+                        rng.gen_range(-limit..=limit),
+                    );
+                    new_coord += noise;
                 }
 
                 // Update the coordinates
