@@ -359,9 +359,8 @@ impl WaterSampler {
 
         // If we do not find anything, at least we return the energy
         // of the current water molecule.
-        // TODO port: energy_coordinates first arg likely incorrect
         self.ad_map
-            .energy_coordinates(&vec![water.coordinates[1]], &oxygen_type, "linear")[0]
+            .energy_coordinates(&[water.coordinates[1]], &oxygen_type, "linear")[0]
     }
 
     fn optimize_disordered_waters(&mut self, waters: &[Water], connections: &[Bond]) -> Vec<f32> {
