@@ -371,11 +371,8 @@ impl Map {
     ///     method (str): Interpolate method (default: linear)
     /// Returns:
     ///     ndarray: 1d Numpy array of the energy values
-    /// TODO port: review xyz type, likely wrong
     pub fn energy_coordinates(&self, xyz: &[Vec3<f32>], atom_type: &str, method: &str) -> Vec<f32> {
-        let mut res = self.maps_interpn[atom_type].interpolate(xyz, method);
-
-        res
+        self.maps_interpn[atom_type].interpolate(xyz, method)
     }
 
     // Return the closest grid index of the cartesian grid coordinates
