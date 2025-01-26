@@ -669,10 +669,11 @@ impl WaterSampler {
                 subarray += &energy;
             }
 
-            // TODO generate interpolator
-            // self.ad_map.maps_interpn[atom_type] = self
-            //     .ad_map
-            //     .generate_affinity_map_interpn(&self.ad_map.maps[atom_type]);
+            self.ad_map.maps_interpn.insert(
+                atom_type.to_string(),
+                self.ad_map
+                    .generate_affinity_map_interpn(&self.ad_map.maps[atom_type]),
+            );
         }
     }
 }
