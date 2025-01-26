@@ -1,6 +1,6 @@
 use anyhow::Result;
 use nalgebra::{UnitQuaternion, Vector3};
-use ndarray::{Array2, Array3, Axis};
+use ndarray::{s, Array2, Array3, Axis};
 use rand::Rng;
 use vek::Vec3;
 
@@ -560,7 +560,8 @@ impl WaterSampler {
             z: 8.,
         };
 
-        let npts = ((box_size / self.ad_map.spacing).round() / 2.).floor() * 2. + 1.;
+        let npts_ft = (((box_size / self.ad_map.spacing).round() / 2.).floor() * 2. + 1.);
+        let npts = npts_ft.map(|comp| comp as i32);
         let water_xyz = &water.coordinates;
 
         // The center is the closest grid point from the water molecule
@@ -569,15 +570,15 @@ impl WaterSampler {
                 .neighbor_points(&water.coordinates(Some(&[1]))[0], self.ad_map.spacing, 0.);
         // TODO port: added a [0] here just to make it compile, most likely more adjustments needed
         let center_index = self.ad_map.cartesian_to_index(&center_xyz[0]);
-        let center_index_ft = center_index.map(|i| i as f32);
 
         // Get grid indices in the receptor box
         // Necessary, in order to add the water map to the receptor map
-        let size_half_box = (npts - Vec3::new(1., 1., 1.)) / 2.;
+        let size_half_box_ft = ((npts_ft - Vec3::new(1., 1., 1.)) / 2.).floor();
+        let size_half_box = size_half_box_ft.map(|comp| comp as i32);
 
-        let i_min = (center_index_ft - size_half_box).map2(npts, |value, max| value.clamp(0., max));
-        let i_max = (center_index_ft + size_half_box + Vec3::new(1., 1., 1.))
-            .map2(npts, |value, max| value.clamp(0., max));
+        let i_min = (center_index - size_half_box).map2(npts, |value, max| value.clamp(0, max));
+        let i_max = (center_index + size_half_box + Vec3::new(1, 1, 1))
+            .map2(npts, |value, max| value.clamp(0, max));
 
         let x_range = i_min.x..i_max.x;
         let y_range = i_min.y..i_max.y;
@@ -589,19 +590,19 @@ impl WaterSampler {
         // Convert the indices in xyz coordinates, and translate it in order
         // that the water molecule is at the origin
         // TODO port: confirm, is there no more elegant way to do this
-        let step = 1.0;
-        let x = generate_float_range(i_min.x, i_max.x, step);
-        let y = generate_float_range(i_min.y, i_max.y, step);
-        let z = generate_float_range(i_min.z, i_max.z, step);
+        let step = 1;
+        let x = generate_range(i_min.x, i_max.x, step);
+        let y = generate_range(i_min.y, i_max.y, step);
+        let z = generate_range(i_min.z, i_max.z, step);
 
         let (X, Y, Z) = meshgrid(&x, &y, &z);
 
-        let x_flat = X.iter().cloned().collect::<Vec<f32>>();
-        let y_flat = Y.iter().cloned().collect::<Vec<f32>>();
-        let z_flat = Z.iter().cloned().collect::<Vec<f32>>();
+        let x_flat = X.iter().cloned().collect::<Vec<i32>>();
+        let y_flat = Y.iter().cloned().collect::<Vec<i32>>();
+        let z_flat = Z.iter().cloned().collect::<Vec<i32>>();
 
         let num_points = x_flat.len();
-        let mut grid_index_array2 = Array2::<f32>::zeros((num_points, 3));
+        let mut grid_index_array2 = Array2::<i32>::zeros((num_points, 3));
 
         for (i, ((&x, &y), &z)) in x_flat.iter().zip(&y_flat).zip(&z_flat).enumerate() {
             grid_index_array2[[i, 0]] = x;
@@ -655,14 +656,20 @@ impl WaterSampler {
 
         // Interpolation baby!
         for atom_type in atom_types {
-            let mut energy =
-                self.water_map
-                    .energy_coordinates(&rotated_grid_xyz, atom_type, "linear");
-            let reshaped_energy = swap_and_reshape(energy, &x, &y, &z);
-            // TODO port
-            // v += energy;
+            // TODO review: not entirely sure this ports correctly the python version
+            let energy = self
+                .water_map
+                .energy_coordinates(&rotated_grid_xyz, atom_type, "linear");
+            let energy_3d = Array3::from_shape_vec((x.len(), y.len(), z.len()), energy).unwrap();
+            let energy = energy_3d.permuted_axes([1, 0, 2]);
 
-            // TODO port what does this do?
+            if let Some(map) = self.ad_map.maps.get_mut(atom_type) {
+                let mut subarray =
+                    map.slice_mut(s![indices.0.clone(), indices.1.clone(), indices.2.clone()]);
+                subarray += &energy;
+            }
+
+            // TODO generate interpolator
             // self.ad_map.maps_interpn[atom_type] = self
             //     .ad_map
             //     .generate_affinity_map_interpn(&self.ad_map.maps[atom_type]);
@@ -670,14 +677,7 @@ impl WaterSampler {
     }
 }
 
-// TODO port: return type unlikely to be correct, also, implement
-// this ports this line:
-// energy = np.swapaxes(energy.reshape((y.shape[0], x.shape[0], z.shape[0])), 0, 1)
-fn swap_and_reshape(energy: Vec<f32>, x: &Vec<f32>, y: &Vec<f32>, z: &Vec<f32>) -> Vec<f32> {
-    todo!()
-}
-
-fn convert_array2_to_vec3(array: Array2<f32>) -> Vec<Vec3<i32>> {
+fn convert_array2_to_vec3(array: Array2<i32>) -> Vec<Vec3<i32>> {
     array
         .rows()
         .into_iter()
@@ -686,14 +686,14 @@ fn convert_array2_to_vec3(array: Array2<f32>) -> Vec<Vec3<i32>> {
 }
 
 // TODO port: review
-pub fn meshgrid(x: &[f32], y: &[f32], z: &[f32]) -> (Array3<f32>, Array3<f32>, Array3<f32>) {
+pub fn meshgrid(x: &[i32], y: &[i32], z: &[i32]) -> (Array3<i32>, Array3<i32>, Array3<i32>) {
     let nx = x.len();
     let ny = y.len();
     let nz = z.len();
 
-    let mut x_grid = Array3::<f32>::zeros((nx, ny, nz));
-    let mut y_grid = Array3::<f32>::zeros((nx, ny, nz));
-    let mut z_grid = Array3::<f32>::zeros((nx, ny, nz));
+    let mut x_grid = Array3::<i32>::zeros((nx, ny, nz));
+    let mut y_grid = Array3::<i32>::zeros((nx, ny, nz));
+    let mut z_grid = Array3::<i32>::zeros((nx, ny, nz));
 
     for (i, &xi) in x.iter().enumerate() {
         x_grid.index_axis_mut(Axis(0), i).fill(xi);
@@ -729,7 +729,7 @@ fn flatten_and_stack(x_grid: Array3<f32>, y_grid: Array3<f32>, z_grid: Array3<f3
     grid_index
 }
 
-fn generate_float_range(start: f32, end: f32, step: f32) -> Vec<f32> {
+fn generate_range(start: i32, end: i32, step: i32) -> Vec<i32> {
     let mut values = Vec::new();
     let mut current = start;
 
