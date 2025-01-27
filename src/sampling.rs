@@ -480,7 +480,7 @@ impl WaterSampler {
     /// Optimize the orientation of the TIP5P water molecule using the grid.
     /// TODO port: is return type correct
     fn optimize_orientation_grid(&self, water: &mut Water) -> Vec<f32> {
-        let oxygen_xyz = &water.coordinates;
+        let oxygen_xyz = &water.coordinates(Some(&[1]));
         let water_info = water.atom_informations(None);
         // oxygen_xyz = water.coordinates(1)
         // water_info = water.atom_informations()
