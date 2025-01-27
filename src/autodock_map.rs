@@ -219,6 +219,7 @@ impl Map {
         all_in
     }
 
+    // TODO port: return float
     /// Get energy interaction of a molecule based of the grid.
     /// Args:
     ///     nd (ndarray): Structure numpy array with columns (i, xyz, q, t)

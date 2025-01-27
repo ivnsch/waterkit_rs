@@ -24,7 +24,7 @@ pub struct WaterSampler {
     pub energy_cutoff: f32,
     pub water_model: String,
     pub angle: f32,
-    pub water_orientations: Vec<Vec<f32>>,
+    pub water_orientations: Vec<[Vec3<f32>; 2]>,
     pub water_ref: Molecule,
     pub water_map: Map,
 }
@@ -478,43 +478,32 @@ impl WaterSampler {
     }
 
     /// Optimize the orientation of the TIP5P water molecule using the grid.
-    /// TODO port: is return type correct
+    /// TODO port: return float
     fn optimize_orientation_grid(&self, water: &mut Water) -> Vec<f32> {
         let oxygen_xyz = &water.coordinates(Some(&[1]));
         let water_info = water.atom_informations(None);
-        // oxygen_xyz = water.coordinates(1)
-        // water_info = water.atom_informations()
-        // energies = np.zeros(self._water_orientations.shape[0])
         let num_orientations = self.water_orientations.len();
         let mut energies: Vec<f32> = vec![0.0; num_orientations];
 
         // Translate the coordinates
-        // let water_orientations = self.water_orientations + oxygen_xyz;
-        // TODO port double check, ndarray? for sure this is verbose
-        let water_orientations: Vec<Vec3<f32>> = self
+        let water_orientations: Vec<[Vec3<f32>; 2]> = self
             .water_orientations
             .iter()
             .zip(oxygen_xyz.iter())
-            .map(|(orientation, oxygen)| {
-                orientation
-                    .iter()
-                    .zip([oxygen.x as f32, oxygen.y as f32, oxygen.z as f32].iter())
-                    .map(|(value, offset_value)| value + offset_value)
-                    .collect()
+            .map(|(orientations, oxygen)| {
+                [orientations[0] + *oxygen, orientations[1] + *oxygen] // Element-wise Vec3 addition
             })
             .collect();
 
         // Get the energies for each atom
         // Oxygen first
-        // energies += ad_map.energy_coordinates(oxygen_xyz, water_info["t"][0])
         let atom_type = &water_info[0].t;
         self.ad_map
             .energy_coordinates(oxygen_xyz, &atom_type, "linear");
         //... and then hydrogens/lone-pairs
         for (i, atom) in water_info.iter().skip(1).enumerate() {
-            // TODO port (use i)
-            // energies += ad_map.energy_coordinates(water_orientations[:,i], atom_type)
-            let orientations = water_orientations.clone();
+            let orientations: Vec<Vec3<f32>> =
+                water_orientations.iter().map(|water| water[i]).collect();
             let coords = self
                 .ad_map
                 .energy_coordinates(&orientations, &atom.t, "linear");
@@ -522,15 +511,11 @@ impl WaterSampler {
         }
 
         // Pick orientation based on Boltzmann choices
-        // idx = utils.boltzmann_choices(energies, self._temperature)
-
         let idx = utils::boltzmann_choices(&energies, self.temperature, None);
 
         if idx.len() > 0 {
             // Update the coordinates with the selected orientation, except oxygen (i + 2)
-            // TODO port: again we've to omit an index to compile, review
-            // let new_orientation = water_orientations[idx[0]];
-            let new_orientation = water_orientations;
+            let new_orientation = water_orientations[idx[0]];
             for (i, xyz) in new_orientation.iter().enumerate() {
                 water.update_coordinates(&xyz, i + 2);
             }
