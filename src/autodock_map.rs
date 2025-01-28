@@ -97,21 +97,6 @@ impl Interpolator {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum EnergyRes {
-    Sum(Vec<f32>),
-    Energies(Vec<Vec<f32>>),
-}
-
-impl EnergyRes {
-    pub fn flatten(&self) -> Vec<f32> {
-        match self {
-            EnergyRes::Sum(vec) => vec.clone(),
-            EnergyRes::Energies(vec) => vec.iter().flat_map(|v| v.iter()).cloned().collect(),
-        }
-    }
-}
-
 impl Map {
     pub async fn new(map_files: Vec<String>, labels: Vec<String>) -> Result<Map> {
         if labels.len() != map_files.len() {
@@ -219,7 +204,6 @@ impl Map {
         all_in
     }
 
-    // TODO port: return float
     /// Get energy interaction of a molecule based of the grid.
     /// Args:
     ///     nd (ndarray): Structure numpy array with columns (i, xyz, q, t)
@@ -237,8 +221,7 @@ impl Map {
         ignore_electrostatics: bool,
         ignore_desolvation: bool,
         method: &str,
-        sum_energies: bool,
-    ) -> EnergyRes {
+    ) -> f32 {
         let mut energies = vec![];
         let mut vdw_hb = vec![];
         let elec = 0.;
@@ -305,11 +288,8 @@ impl Map {
             }
         }
 
-        if sum_energies {
-            EnergyRes::Sum(energies.into_iter().map(|e| e.into_iter().sum()).collect())
-        } else {
-            EnergyRes::Energies(energies)
-        }
+        let flat = energies.into_iter().flatten();
+        flat.sum()
     }
 
     /// Grid coordinates around a point at a certain distance.

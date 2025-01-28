@@ -166,7 +166,7 @@ impl WaterSampler {
 
                     // The last great energy filter
                     if utils::boltzmann_acceptance_rejection(
-                        &energy_orientation,
+                        &[energy_orientation],
                         &vec![self.energy_cutoff],
                         self.temperature,
                     )[0]
@@ -174,7 +174,7 @@ impl WaterSampler {
                         shells.push(Shell {
                             shell_id: shell_id + 1,
                             energy_position: Some(energy_position),
-                            energy_orientation,
+                            energy_orientation: vec![energy_orientation],
                         });
                         // data.append((shell_id + 1, energy_position, energy_orientation))
                         self.update_maps(&water);
@@ -384,18 +384,13 @@ impl WaterSampler {
 
                 if !rot_waters.is_empty() {
                     // Get energy of the favorable disordered waters
-                    let energy_waters_nested = rot_waters
+                    let energy_waters = rot_waters
                         .iter()
                         .map(|w| {
                             self.ad_map
-                                .energy(&w.atoms(), vec![], false, true, true, "linear", true)
-                                .flatten()
+                                .energy(&w.atoms(), vec![], false, true, true, "linear")
                         })
-                        .collect::<Vec<Vec<f32>>>();
-                    let energy_waters: Vec<f32> = energy_waters_nested
-                        .into_iter()
-                        .flat_map(|v| v.into_iter())
-                        .collect();
+                        .collect::<Vec<f32>>();
                     for mut w in &energy_waters {
                         w = &w.min(0.);
                     }
@@ -429,18 +424,13 @@ impl WaterSampler {
 
                         // Get energy and update the current angle (increment rotation)
                         // TODO port: same block of code as bit above, maybe refactor
-                        let energy_waters_nested = rot_waters
+                        let energy_waters = rot_waters
                             .iter()
                             .map(|w| {
                                 self.ad_map
-                                    .energy(&w.atoms(), vec![], false, true, true, "linear", true)
-                                    .flatten()
+                                    .energy(&w.atoms(), vec![], false, true, true, "linear")
                             })
-                            .collect::<Vec<Vec<f32>>>();
-                        let mut energy_waters: Vec<f32> = energy_waters_nested
-                            .into_iter()
-                            .flat_map(|v| v.into_iter())
-                            .collect();
+                            .collect::<Vec<f32>>();
                         for mut w in &energy_waters {
                             w = &w.min(0.);
                         }
@@ -478,8 +468,7 @@ impl WaterSampler {
     }
 
     /// Optimize the orientation of the TIP5P water molecule using the grid.
-    /// TODO port: return float
-    fn optimize_orientation_grid(&self, water: &mut Water) -> Vec<f32> {
+    fn optimize_orientation_grid(&self, water: &mut Water) -> f32 {
         let oxygen_xyz = &water.coordinates(Some(&[1]));
         let water_info = water.atom_informations(None);
         let num_orientations = self.water_orientations.len();
@@ -520,18 +509,16 @@ impl WaterSampler {
                 water.update_coordinates(&xyz, i + 2);
             }
 
-            // TODO port: and again omitting an index..
-            // return energies[idx[0]];
-            return energies;
+            return energies[idx[0]];
         }
 
         // If we do not find anything, at least we return the energy
         // of the current water molecule.
         let current_energy =
             self.ad_map
-                .energy(&water.atoms(), vec![], false, true, true, "linear", true);
+                .energy(&water.atoms(), vec![], false, true, true, "linear");
 
-        current_energy.flatten()
+        current_energy
     }
 
     /// If we choose the closest point in the grid and not the coordinates of the
