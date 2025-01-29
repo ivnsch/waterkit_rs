@@ -38,71 +38,75 @@ impl Interpolator {
     // Note assuming always trilinear. Are other methods actually used in original library?
     fn interpolate(&self, points: &[Vec3<f32>], method: &str) -> Vec<f32> {
         let mut results = Vec::with_capacity(points.len());
-        let (x_len, y_len, z_len) = self.affinity_map.dim();
 
         // println!("affinity map: {:?}", self.affinity_map);
 
         for point in points {
-            let x = point.x;
-            let y = point.y;
-            let z = point.z;
-
-            // Compute the integer coordinates of the cube surrounding (x, y, z)
-            let x0 = x.floor() as isize;
-            let y0 = y.floor() as isize;
-            let z0 = z.floor() as isize;
-
-            let x1 = (x0 + 1).min(x_len as isize - 1);
-            let y1 = (y0 + 1).min(y_len as isize - 1);
-            let z1 = (z0 + 1).min(z_len as isize - 1);
-
-            // Extrapolation: Clamp values within the grid boundaries
-            // TODO port: better extrapolation method? what does python grid interpolator do here?
-            let x0 = x0.clamp(0, x_len as isize - 1) as usize;
-            let y0 = y0.clamp(0, y_len as isize - 1) as usize;
-            let z0 = z0.clamp(0, z_len as isize - 1) as usize;
-            let x1 = x1.clamp(0, x_len as isize - 1) as usize;
-            let y1 = y1.clamp(0, y_len as isize - 1) as usize;
-            let z1 = z1.clamp(0, z_len as isize - 1) as usize;
-
-            // Retrieve values from the 8 corners of the cube
-            let c000 = self.affinity_map[[x0, y0, z0]];
-            let c001 = self.affinity_map[[x0, y0, z1]];
-            let c010 = self.affinity_map[[x0, y1, z0]];
-            let c011 = self.affinity_map[[x0, y1, z1]];
-            let c100 = self.affinity_map[[x1, y0, z0]];
-            let c101 = self.affinity_map[[x1, y0, z1]];
-            let c110 = self.affinity_map[[x1, y1, z0]];
-            let c111 = self.affinity_map[[x1, y1, z1]];
-
-            // Perform trilinear interpolation
-            // https://en.wikipedia.org/wiki/Trilinear_interpolation
-
-            // Compute interpolation weights
-            // NOTE leaving out denominators as our grid spacing is 1, which makes them 1
-            // NOTE also, we clamp because we clamped the cube's vertices to grid boundaries
-            // TODO port: last note points to issue - we shouldn't really clamp here,
-            // it's ok if far away point generates large values
-            // but using this later to compute probability weights causes errors so leaving it like this for now
-            let xd = (x - x0 as f32).clamp(0.0, 1.0);
-            let yd = (y - y0 as f32).clamp(0.0, 1.0);
-            let zd = (z - z0 as f32).clamp(0.0, 1.0);
-
-            let c00 = c000 * (1.0 - xd) + c100 * xd;
-            let c01 = c001 * (1.0 - xd) + c101 * xd;
-            let c10 = c010 * (1.0 - xd) + c110 * xd;
-            let c11 = c011 * (1.0 - xd) + c111 * xd;
-
-            let c0 = c00 * (1.0 - yd) + c01 * yd;
-            let c1 = c10 * (1.0 - yd) + c11 * yd;
-
-            let interpolated_value = c0 * (1.0 - zd) + c1 * zd;
-
-            results.push(interpolated_value);
+            results.push(interpolate_point(&self.affinity_map, point));
         }
 
         results
     }
+}
+
+fn interpolate_point(affinity_map: &Array3<f32>, point: &Vec3<f32>) -> f32 {
+    let (x_len, y_len, z_len) = affinity_map.dim();
+
+    let x = point.x;
+    let y = point.y;
+    let z = point.z;
+
+    // Compute the integer coordinates of the cube surrounding (x, y, z)
+    let x0 = x.floor() as isize;
+    let y0 = y.floor() as isize;
+    let z0 = z.floor() as isize;
+
+    let x1 = (x0 + 1).min(x_len as isize - 1);
+    let y1 = (y0 + 1).min(y_len as isize - 1);
+    let z1 = (z0 + 1).min(z_len as isize - 1);
+
+    // Extrapolation: Clamp values within the grid boundaries
+    // TODO port: better extrapolation method? what does python grid interpolator do here?
+    let x0 = x0.clamp(0, x_len as isize - 1) as usize;
+    let y0 = y0.clamp(0, y_len as isize - 1) as usize;
+    let z0 = z0.clamp(0, z_len as isize - 1) as usize;
+    let x1 = x1.clamp(0, x_len as isize - 1) as usize;
+    let y1 = y1.clamp(0, y_len as isize - 1) as usize;
+    let z1 = z1.clamp(0, z_len as isize - 1) as usize;
+
+    // Retrieve values from the 8 corners of the cube
+    let c000 = affinity_map[[x0, y0, z0]];
+    let c001 = affinity_map[[x0, y0, z1]];
+    let c010 = affinity_map[[x0, y1, z0]];
+    let c011 = affinity_map[[x0, y1, z1]];
+    let c100 = affinity_map[[x1, y0, z0]];
+    let c101 = affinity_map[[x1, y0, z1]];
+    let c110 = affinity_map[[x1, y1, z0]];
+    let c111 = affinity_map[[x1, y1, z1]];
+
+    // Perform trilinear interpolation
+    // https://en.wikipedia.org/wiki/Trilinear_interpolation
+
+    // Compute interpolation weights
+    // NOTE leaving out denominators as our grid spacing is 1, which makes them 1
+    // NOTE also, we clamp because we clamped the cube's vertices to grid boundaries
+    // TODO port: last note points to issue - we shouldn't really clamp here,
+    // it's ok if far away point generates large values
+    // but using this later to compute probability weights causes errors so leaving it like this for now
+    let xd = (x - x0 as f32).clamp(0.0, 1.0);
+    let yd = (y - y0 as f32).clamp(0.0, 1.0);
+    let zd = (z - z0 as f32).clamp(0.0, 1.0);
+
+    let c00 = c000 * (1.0 - xd) + c100 * xd;
+    let c01 = c001 * (1.0 - xd) + c101 * xd;
+    let c10 = c010 * (1.0 - xd) + c110 * xd;
+    let c11 = c011 * (1.0 - xd) + c111 * xd;
+
+    let c0 = c00 * (1.0 - yd) + c01 * yd;
+    let c1 = c10 * (1.0 - yd) + c11 * yd;
+
+    let interpolated_value = c0 * (1.0 - zd) + c1 * zd;
+    interpolated_value
 }
 
 impl Map {
