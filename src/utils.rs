@@ -100,6 +100,8 @@ pub fn boltzmann_probabilities(energies: &[f32], temperature: f32) -> Vec<f32> {
 /// Choose state i based on boltzmann probability.
 pub fn boltzmann_choices(energies: &[f32], temperature: f32, size: Option<usize>) -> Vec<usize> {
     // TODO port: HACK! scaling down energies, we get values ~100x of python implementation. Fix!
+    // println!("energies: {:?}", energies);
+
     let energies = energies
         .to_vec()
         .into_iter()
