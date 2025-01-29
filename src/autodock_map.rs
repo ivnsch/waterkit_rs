@@ -74,6 +74,9 @@ fn interpolate_point(affinity_map: &Array3<f32>, point: &Vec3<f32>) -> f32 {
     let y1 = y1.clamp(0, y_len as isize - 1) as usize;
     let z1 = z1.clamp(0, z_len as isize - 1) as usize;
 
+    // Perform trilinear interpolation
+    // https://en.wikipedia.org/wiki/Trilinear_interpolation
+
     // Retrieve values from the 8 corners of the cube
     let c000 = affinity_map[[x0, y0, z0]];
     let c001 = affinity_map[[x0, y0, z1]];
@@ -83,9 +86,6 @@ fn interpolate_point(affinity_map: &Array3<f32>, point: &Vec3<f32>) -> f32 {
     let c101 = affinity_map[[x1, y0, z1]];
     let c110 = affinity_map[[x1, y1, z0]];
     let c111 = affinity_map[[x1, y1, z1]];
-
-    // Perform trilinear interpolation
-    // https://en.wikipedia.org/wiki/Trilinear_interpolation
 
     // Compute interpolation weights
     // NOTE leaving out denominators as our grid spacing is 1, which makes them 1
