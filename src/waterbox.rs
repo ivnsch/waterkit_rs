@@ -88,6 +88,9 @@ impl WaterBox {
     // TODO port: add_kd_tree not used?
     fn add_molecules(&mut self, molecules: &[MoleculeType], add_kd_tree: bool) {
         self.molecules.extend(molecules.iter().cloned());
+        if add_kd_tree {
+            self.add_molecules_to_kd_tree(molecules);
+        }
     }
 
     /// Add connections between molecules
