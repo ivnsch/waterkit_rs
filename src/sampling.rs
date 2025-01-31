@@ -682,25 +682,6 @@ pub fn meshgrid(x: &[i32], y: &[i32], z: &[i32]) -> (Array3<i32>, Array3<i32>, A
     (x_grid, y_grid, z_grid)
 }
 
-fn flatten_and_stack(x_grid: Array3<f32>, y_grid: Array3<f32>, z_grid: Array3<f32>) -> Array2<f32> {
-    // Flatten the 3D grids into 1D arrays
-    let x_flat = x_grid.iter().cloned().collect::<Vec<f32>>();
-    let y_flat = y_grid.iter().cloned().collect::<Vec<f32>>();
-    let z_flat = z_grid.iter().cloned().collect::<Vec<f32>>();
-
-    // Stack the flattened arrays into a single 2D array
-    let num_points = x_flat.len();
-    let mut grid_index = Array2::<f32>::zeros((num_points, 3));
-
-    for (i, ((&x, &y), &z)) in x_flat.iter().zip(&y_flat).zip(&z_flat).enumerate() {
-        grid_index[[i, 0]] = x;
-        grid_index[[i, 1]] = y;
-        grid_index[[i, 2]] = z;
-    }
-
-    grid_index
-}
-
 fn generate_range(start: i32, end: i32, step: i32) -> Vec<i32> {
     let mut values = Vec::new();
     let mut current = start;
