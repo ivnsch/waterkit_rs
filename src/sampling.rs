@@ -658,7 +658,6 @@ fn convert_array2_to_vec3(array: Array2<i32>) -> Vec<Vec3<i32>> {
         .collect()
 }
 
-// TODO port: review
 pub fn meshgrid(x: &[i32], y: &[i32], z: &[i32]) -> (Array3<i32>, Array3<i32>, Array3<i32>) {
     let nx = x.len();
     let ny = y.len();
@@ -669,11 +668,11 @@ pub fn meshgrid(x: &[i32], y: &[i32], z: &[i32]) -> (Array3<i32>, Array3<i32>, A
     let mut z_grid = Array3::<i32>::zeros((nx, ny, nz));
 
     for (i, &xi) in x.iter().enumerate() {
-        x_grid.index_axis_mut(Axis(0), i).fill(xi);
+        x_grid.index_axis_mut(Axis(1), i).fill(xi);
     }
 
     for (j, &yj) in y.iter().enumerate() {
-        y_grid.index_axis_mut(Axis(1), j).fill(yj);
+        y_grid.index_axis_mut(Axis(0), j).fill(yj);
     }
 
     for (k, &zk) in z.iter().enumerate() {
