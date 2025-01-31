@@ -166,18 +166,8 @@ impl Map {
         let edges_y = linspace(min.y, max.y, grid_information.nelements.y as usize);
         let edges_z = linspace(min.z, max.z, grid_information.nelements.z as usize);
 
-        let mut meshgrid: Vec<[f32; 3]> = Vec::new();
-        for &x in &edges_x {
-            for &y in &edges_y {
-                for &z in &edges_z {
-                    meshgrid.push([x, y, z]);
-                }
-            }
-        }
-
         Ok(Map {
-            kd_tree: KdTree::build_by_ordered_float(meshgrid),
-            // self._spacing = grid_information["spacing"]
+            kd_tree: build_kdtree_from_grid(&edges_x, &edges_y, &edges_z),
             spacing: grid_information.spacing,
             npts: grid_information.nelements,
             center: grid_information.center,
@@ -460,4 +450,19 @@ fn linspace(start: f32, stop: f32, num: usize) -> Vec<f32> {
     }
     let step = (stop - start) / (num as f32 - 1.0);
     (0..num).map(|i| start + step * i as f32).collect()
+}
+
+fn build_kdtree_from_grid(edges_x: &[f32], edges_y: &[f32], edges_z: &[f32]) -> KdTree<[f32; 3]> {
+    // empirically equivalent to python:
+    // X, Y, Z = np.meshgrid(x, y, z)
+    // xyz = np.stack((X.ravel(), Y.ravel(), Z.ravel()), axis=-1)
+    let mut kd_tree_points: Vec<[f32; 3]> = Vec::new();
+    for &x in edges_x {
+        for &y in edges_y {
+            for &z in edges_z {
+                kd_tree_points.push([x, y, z]);
+            }
+        }
+    }
+    KdTree::build_by_ordered_float(kd_tree_points)
 }
