@@ -180,7 +180,7 @@ impl Map {
             ymax: max.y,
             zmax: max.z,
             maps: affinity_maps,
-            maps_interpn: maps_interpn,
+            maps_interpn,
             edges: (edges_x, edges_y, edges_z),
         })
     }
