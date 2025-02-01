@@ -49,11 +49,11 @@ ad_map_for_rust = {
     "box_center": ad_map._center,
     "box_size": ad_map._npts,
     "box_spacing": ad_map._spacing,
-    "labels": list(ad_map._maps.keys()),
-    "files": ad_map._files,
+    "labels": ["OW", "SW"],
+    "files": ["./receptor.OW.map", "./vina.O_DA.map"],
 }
 
 print(str(await waterkit_rs.run(receptor_for_rust, water_for_rust, ad_map_for_rust)))
 ```
 
-Currently requires waterkit/data directory to be directly under root, and files receptor_maps.fld, receptor.d.map, receptor.e.map and receptor.OW.map to be under root as well.
+Currently requires waterkit/data directory to be directly under root, and files receptor_maps.fld, vina.O_DA.map and receptor.OW.map to be under root as well.

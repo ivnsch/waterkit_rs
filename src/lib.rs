@@ -92,6 +92,7 @@ async fn run(
     let receptor = to_molecule(receptor_python);
     let water = to_molecule(water_python);
     let ad_map = to_map(ad_map_python).await.unwrap();
+    // TODO port: utils.prepare_water_map(ad_map, water_model)
     let res = hydrate_rust(receptor, water, ad_map, "traj", 10000, 3, 20.).await;
     Ok(())
 }

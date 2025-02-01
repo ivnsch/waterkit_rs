@@ -12,12 +12,10 @@
   "box_spacing": 0.375,
   "labels": [
     "OW",
-    "SW",
-    "HW"
+    "SW"
   ],
   "files": [
     "./receptor.OW.map",
-    "./receptor.e.map",
-    "./receptor.d.map"
+    "./vina.O_DA.map"
   ]
 }
