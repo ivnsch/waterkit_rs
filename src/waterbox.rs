@@ -294,10 +294,9 @@ impl WaterBox {
 
         let shell_id = self.number_of_shells();
 
-        // TODO port: HACK! starting at 0 instead of 1 because otherwise nothing is printed
-        // let water_shells = (1..=shell_id)
-        let water_shells = (0..=shell_id)
-            .map(|_| self.molecules_in_shell(Some(&vec![shell_id])))
+        // TODO port: nothing printed. Something is printed if replacing 1 with 0 in next line.
+        let water_shells = (1..=shell_id)
+            .map(|i| self.molecules_in_shell(Some(&vec![i])))
             .collect::<Vec<Vec<MoleculeType>>>();
 
         // let ws = water_shells.cloned().collect();
