@@ -164,14 +164,13 @@ pub fn boltzmann_acceptance_rejection(
     } else {
         let unfavorable_indices = decisions.clone().enumerate().filter_map(|(i, d)| Some(i));
 
-        let unfavorable_old_energies = vec![old_energies];
+        let unfavorable_old_energies = old_energies;
 
         // let delta_e = unfavorable_indices.map(|i| new_energies[i])
         let delta_e: Vec<f32> = unfavorable_indices
             .clone()
             .map(|i| new_energies[i]) // Extract elements from new_energies using indices
-            .zip(unfavorable_old_energies.iter())
-            .map(|(new, &old)| new - old) // Compute the difference
+            .map(|new| new - unfavorable_old_energies) // Compute the difference
             .collect();
 
         let p_acc: Vec<f32> = delta_e
