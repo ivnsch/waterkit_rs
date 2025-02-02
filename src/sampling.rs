@@ -298,12 +298,11 @@ impl WaterSampler {
         let order: Vec<usize> =
             utils::boltzmann_choices(&energies, self.temperature, Some(energies.len()));
 
-        let new_energies = order.iter().map(|&i| energies[i]).collect::<Vec<f32>>();
-
         if !order.is_empty() {
+            let energies = order.iter().map(|&o| energies[o]).collect::<Vec<f32>>();
             let decisions = utils::boltzmann_acceptance_rejection(
-                &new_energies,
                 &vec![self.energy_cutoff],
+                &energies,
                 self.temperature,
             );
 
