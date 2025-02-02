@@ -88,13 +88,49 @@ async fn run(
     receptor_python: PythonMolecule,
     water_python: PythonMolecule,
     ad_map_python: PythonAdMap,
+    water_model: String,
 ) -> PyResult<()> {
     let receptor = to_molecule(receptor_python);
     let water = to_molecule(water_python);
-    let ad_map = to_map(ad_map_python).await.unwrap();
+    let mut ad_map = to_map(ad_map_python).await.unwrap();
+    prepare_water_map(&mut ad_map, &water_model, 1.);
+
     // TODO port: utils.prepare_water_map(ad_map, water_model)
     let res = hydrate_rust(receptor, water, ad_map, "traj", 10000, 3, 20.).await;
     Ok(())
+}
+
+fn prepare_water_map(ad_map: &mut Map, water_model: &str, dielectric: f32) {
+    let e_type = "Electrostatics";
+
+    let (hw_type, hw_q) = match water_model {
+        "tip3p" => ("HW", 0.417),
+        "tip5p" => ("HT", 0.241),
+        _ => {
+            panic!("Water model {} unknown", water_model);
+        }
+    };
+
+    // For the TIP3P and TIP5P models
+    ad_map.apply_operation_on_maps(&hw_type, &e_type, |val| val * hw_q / dielectric);
+
+    match water_model {
+        "tip3p" => {
+            let ow_type: &str = "OW";
+            let ow_q = -0.834;
+            ad_map.apply_operation_on_maps(&e_type, &e_type, |val| val * ow_q / dielectric);
+            ad_map.add(ow_type, &ow_type, &e_type);
+        }
+        "tip5p" => {
+            let lw_type = "LP";
+            let lw_q = -0.241;
+            ad_map.apply_operation_on_maps(&lw_type, &e_type, |val| val * lw_q / dielectric);
+        }
+
+        _ => {
+            panic!("Water model {} unknown", water_model);
+        }
+    }
 }
 
 #[derive(Debug, FromPyObject, Serialize, Deserialize)]

@@ -399,6 +399,25 @@ impl Map {
 
         Map::new(parsed_fld.map_files, parsed_fld.labels).await
     }
+
+    pub fn apply_operation_on_maps(
+        &mut self,
+        name: &str,
+        atom_type: &str,
+        operation: impl Fn(f32) -> f32,
+    ) {
+        let values = &self.maps[atom_type];
+        let mapped = values.map(|value| operation(*value));
+        self.maps.insert(name.to_string(), mapped);
+    }
+
+    // Note: port: for now a restricted version of "combine", since the genericity is not needed
+    pub fn add(&mut self, name: &str, atom_type1: &str, atom_type2: &str) {
+        let map1 = &self.maps[atom_type1];
+        let map2 = &self.maps[atom_type2];
+
+        self.maps.insert(name.to_string(), map1 + map2);
+    }
 }
 
 fn calculate_bounds(tree: &KdTree<[f32; 3]>) -> ([f32; 3], [f32; 3]) {
