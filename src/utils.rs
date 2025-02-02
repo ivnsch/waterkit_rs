@@ -146,7 +146,9 @@ pub fn get_angle(a: &Vec3<f32>, b: &Vec3<f32>, c: &Vec3<f32>, degree: bool) -> f
 // TODO port: review callers of this and argument types
 pub fn boltzmann_acceptance_rejection(
     new_energies: &[f32],
-    old_energies: &[f32],
+    // NOTE port: old_energies is always one value in original,
+    // for simplicity then handling it as one value (instead of array)
+    old_energies: f32,
     temperature: f32,
 ) -> Vec<bool> {
     let kb = 0.0019872041;
@@ -155,24 +157,14 @@ pub fn boltzmann_acceptance_rejection(
     // new_energies = np.ravel(new_energies)
     // old_energies = np.ravel(old_energies)
 
-    let mut decisions = new_energies
-        .iter()
-        .zip(old_energies.iter())
-        .map(|(&new, &old)| new < old);
+    let mut decisions = new_energies.iter().map(|&new| new < old_energies);
 
     if decisions.all(|d| d) {
         return decisions.collect();
     } else {
         let unfavorable_indices = decisions.clone().enumerate().filter_map(|(i, d)| Some(i));
 
-        let unfavorable_old_energies = if old_energies.len() == 1 {
-            old_energies.to_vec()
-        } else {
-            unfavorable_indices
-                .clone()
-                .map(|i| old_energies[i])
-                .collect()
-        };
+        let unfavorable_old_energies = vec![old_energies];
 
         // let delta_e = unfavorable_indices.map(|i| new_energies[i])
         let delta_e: Vec<f32> = unfavorable_indices

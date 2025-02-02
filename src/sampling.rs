@@ -154,7 +154,7 @@ impl WaterSampler {
                 // The first great filter
                 if utils::boltzmann_acceptance_rejection(
                     &vec![energy_position],
-                    &vec![self.energy_cutoff],
+                    self.energy_cutoff,
                     self.temperature,
                 )[0]
                 {
@@ -167,7 +167,7 @@ impl WaterSampler {
                     // The last great energy filter
                     if utils::boltzmann_acceptance_rejection(
                         &[energy_orientation],
-                        &vec![self.energy_cutoff],
+                        self.energy_cutoff,
                         self.temperature,
                     )[0]
                     {
@@ -301,8 +301,8 @@ impl WaterSampler {
         if !order.is_empty() {
             let energies = order.iter().map(|&o| energies[o]).collect::<Vec<f32>>();
             let decisions = utils::boltzmann_acceptance_rejection(
-                &vec![self.energy_cutoff],
                 &energies,
+                self.energy_cutoff,
                 self.temperature,
             );
 
